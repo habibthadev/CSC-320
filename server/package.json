@@ -3,12 +3,24 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
   },
-  "keywords": [],
+  "keywords": [
+    "document",
+    "ai",
+    "rag",
+    "question",
+    "generation",
+    "pdf",
+    "docx",
+    "image",
+    "ocr"
+  ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
     "bcryptjs": "^3.0.2",

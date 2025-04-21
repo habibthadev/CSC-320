@@ -24,6 +24,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
+app.get("/", (req, res) => {
+  res.json({
+    status: "success",
+    statusCode: 200,
+    message: "API is working properly",
+    author: "Habib Adebayo",
+    date: new Date().getTime(),
+  });
+});
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/documents", documentRoutes);
