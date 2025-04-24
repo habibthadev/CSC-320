@@ -1,5 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { AppError } from "../middleware/errorMiddleware.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // Initialize GoogleGenerativeAI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
