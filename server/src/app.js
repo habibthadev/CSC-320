@@ -16,9 +16,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Connect to MongoDB
-connectDB();
-
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -45,6 +42,7 @@ app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
+  connectDB();
   console.log(`Server running on port ${PORT}`);
 });
 
