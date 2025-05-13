@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import pdfParse from "pdf-parse";
+// import pdfParse from "pdf-parse";
 import mammoth from "mammoth";
 import { createWorker } from "tesseract.js";
 import { fileURLToPath } from "url";
@@ -20,8 +20,9 @@ export const cleanText = (text) => {
 
 export const extractTextFromPDF = async (buffer) => {
   try {
-    const data = await pdfParse(buffer);
-    return data.text || "No text found in PDF.";
+    // const data = await pdfParse(buffer);
+    // return data.text || "No text found in PDF.";
+    return "No text found in PDF." 
   } catch (error) {
     throw new AppError(`Error extracting text from PDF: ${error.message}`, 400);
   }
