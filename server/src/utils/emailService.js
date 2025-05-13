@@ -1,4 +1,7 @@
 import nodemailer from "nodemailer";
+import { config } from "dotenv" 
+
+config()
 
 export const createTransporter = () => {
   return nodemailer.createTransport({
