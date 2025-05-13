@@ -34,8 +34,8 @@ app.use("/api/rag", ragRoutes);
 
 app.use(errorHandler);
 
-app.listen(PORT, async () => {
-  await connectDB();
+app.listen(PORT, () => {
+  connectDB();
   console.log(`Server running on port ${PORT}`);
 });
 
