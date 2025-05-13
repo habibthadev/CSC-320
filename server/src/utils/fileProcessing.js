@@ -1,4 +1,5 @@
 import fs from "fs";
+import os from "os";
 import path from "path";
 // import pdfParse from "pdf-parse";
 import mammoth from "mammoth";
