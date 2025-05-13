@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+import { config } from "dotemv" 
+
+config()
 
 export const connectDB = async () => {
   try {
