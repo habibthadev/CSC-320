@@ -18,7 +18,6 @@ const PrivacyPolicy = () => {
       fadeIn(contentRef.current, 0.2);
     }
 
-    // Scroll to top when component mounts
     window.scrollTo(0, 0);
   }, []);
 

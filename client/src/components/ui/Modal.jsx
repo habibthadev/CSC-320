@@ -38,7 +38,6 @@ const Modal = ({
       document.addEventListener("keydown", handleEscape);
       document.body.style.overflow = "hidden";
 
-      // Animate in
       if (modalRef.current) fadeIn(modalRef.current, 0.1);
       if (overlayRef.current) fadeIn(overlayRef.current, 0);
     }
@@ -50,7 +49,6 @@ const Modal = ({
   }, [isOpen, onClose]);
 
   const handleClose = async () => {
-    // Animate out
     if (modalRef.current) await fadeOut(modalRef.current, 0).then();
     if (overlayRef.current) await fadeOut(overlayRef.current, 0.1).then();
     onClose();

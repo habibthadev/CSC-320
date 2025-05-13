@@ -11,7 +11,6 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Protected routes
 router.use(protect);
 
 router.get("/", getAllQuestions);

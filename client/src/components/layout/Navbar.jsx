@@ -31,7 +31,6 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    // Close mobile menu when route changes
     setIsMenuOpen(false);
   }, [location]);
 
@@ -60,7 +59,7 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
+          {}
           <div className="hidden md:flex md:items-center md:space-x-4">
             {navLinks.map(
               (link) =>
@@ -124,7 +123,7 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile menu button */}
+          {}
           <div className="flex items-center md:hidden">
             <button
               onClick={toggleTheme}
@@ -153,7 +152,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {}
       {isMenuOpen && (
         <div className="md:hidden bg-white dark:bg-gray-900 shadow-lg">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">

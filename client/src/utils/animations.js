@@ -1,6 +1,5 @@
 import { gsap } from "gsap";
 
-// Fade in animation
 export const fadeIn = (element, duration = 0.5, delay = 0) => {
   return gsap.fromTo(
     element,
@@ -14,7 +13,6 @@ export const fadeIn = (element, duration = 0.5, delay = 0) => {
   );
 };
 
-// Fade out animation
 export const fadeOut = (element, duration = 0.5, delay = 0) => {
   return gsap.to(element, {
     opacity: 0,
@@ -24,7 +22,6 @@ export const fadeOut = (element, duration = 0.5, delay = 0) => {
   });
 };
 
-// Slide in from right
 export const slideInRight = (
   element,
   duration = 0.5,
@@ -47,7 +44,6 @@ export const slideInRight = (
   );
 };
 
-// Slide in from left
 export const slideInLeft = (
   element,
   duration = 0.5,
@@ -70,7 +66,6 @@ export const slideInLeft = (
   );
 };
 
-// Stagger animation for multiple items
 export const staggerItems = (elements, duration = 0.5, stagger = 0.1) => {
   return gsap.fromTo(
     elements,

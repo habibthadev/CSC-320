@@ -179,7 +179,6 @@ const useAuthStore = create(
           set({ token: response.data.token });
           return true;
         } catch (error) {
-          // If refresh token is invalid, log the user out
           get().logout();
           return false;
         }
@@ -233,7 +232,6 @@ const useAuthStore = create(
             error.response?.data?.message || "Failed to fetch profile";
           set({ error: errorMessage, isLoading: false });
 
-          // If unauthorized, log the user out
           if (error.response?.status === 401) {
             get().logout();
           }

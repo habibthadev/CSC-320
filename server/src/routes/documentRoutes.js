@@ -13,7 +13,6 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Protected routes
 router.use(protect);
 
 router.route("/").get(getDocuments).post(upload.array("files"), uploadDocument);

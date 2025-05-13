@@ -319,7 +319,7 @@ const QuestionDetail = () => {
           </Card>
         )}
 
-        {/* Hidden PDF template for export */}
+        {}
         <div className="hidden">
           <QuestionAnswerPdf
             ref={targetRef}

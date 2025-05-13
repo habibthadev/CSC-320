@@ -108,12 +108,9 @@ const DocumentList = () => {
             Manage your uploaded documents
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row">
           <Button to="/documents/upload" icon={Upload}>
             Upload Document
-          </Button>
-          <Button to="/chat" variant="secondary" icon={Plus}>
-            New Chat
           </Button>
         </div>
       </div>

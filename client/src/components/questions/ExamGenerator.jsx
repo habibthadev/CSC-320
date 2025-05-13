@@ -39,7 +39,6 @@ const ExamGenerator = () => {
   useEffect(() => {
     getDocumentById(documentId);
 
-    // Clear any previous exam results when generating a new exam
     clearExamResults();
   }, [documentId, getDocumentById, clearExamResults]);
 
@@ -108,7 +107,7 @@ const ExamGenerator = () => {
 
     if (success) {
       toast.success("Questions generated successfully");
-      // Navigate to the exam page with the generated questions
+
       navigate(`/exam/${documentId}`, { state: { questions: data } });
     } else {
       toast.error(error || "Failed to generate questions");

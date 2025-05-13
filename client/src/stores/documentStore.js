@@ -10,7 +10,6 @@ const useDocumentStore = create((set, get) => ({
   error: null,
   searchResults: [],
 
-  // Get all documents
   getDocuments: async () => {
     const token = useAuthStore.getState().token;
 
@@ -43,12 +42,10 @@ const useDocumentStore = create((set, get) => ({
     }
   },
 
-  // Fetch all documents (alias for getDocuments)
   fetchDocuments: async () => {
     return get().getDocuments();
   },
 
-  // Get document by ID
   getDocumentById: async (id) => {
     const token = useAuthStore.getState().token;
 
@@ -81,7 +78,6 @@ const useDocumentStore = create((set, get) => ({
     }
   },
 
-  // Upload document
   uploadDocument: async (formData) => {
     const token = useAuthStore.getState().token;
 
@@ -100,7 +96,6 @@ const useDocumentStore = create((set, get) => ({
         },
       });
 
-      // Update documents list with new document(s)
       set((state) => ({
         documents: [...state.documents, ...response.data.data],
         isLoading: false,
@@ -117,7 +112,6 @@ const useDocumentStore = create((set, get) => ({
     }
   },
 
-  // Update document
   updateDocument: async (id, data) => {
     const token = useAuthStore.getState().token;
 
@@ -135,7 +129,6 @@ const useDocumentStore = create((set, get) => ({
         },
       });
 
-      // Update document in the list
       set((state) => ({
         documents: state.documents.map((doc) =>
           doc._id === id ? response.data.data : doc
@@ -155,7 +148,6 @@ const useDocumentStore = create((set, get) => ({
     }
   },
 
-  // Delete document
   deleteDocument: async (id) => {
     const token = useAuthStore.getState().token;
 
@@ -173,7 +165,6 @@ const useDocumentStore = create((set, get) => ({
         },
       });
 
-      // Remove document from the list
       set((state) => ({
         documents: state.documents.filter((doc) => doc._id !== id),
         isLoading: false,
@@ -190,7 +181,6 @@ const useDocumentStore = create((set, get) => ({
     }
   },
 
-  // Vectorize document
   vectorizeDocument: async (id) => {
     const token = useAuthStore.getState().token;
 
@@ -212,7 +202,6 @@ const useDocumentStore = create((set, get) => ({
         }
       );
 
-      // Update document in the list to show it's vectorized
       set((state) => ({
         documents: state.documents.map((doc) =>
           doc._id === id ? { ...doc, vectorized: true } : doc
@@ -235,7 +224,6 @@ const useDocumentStore = create((set, get) => ({
     }
   },
 
-  // Search documents
   searchDocuments: async (query) => {
     const token = useAuthStore.getState().token;
 
@@ -270,12 +258,10 @@ const useDocumentStore = create((set, get) => ({
     }
   },
 
-  // Clear current document
   clearCurrentDocument: () => {
     set({ currentDocument: null });
   },
 
-  // Clear search results
   clearSearchResults: () => {
     set({ searchResults: [] });
   },

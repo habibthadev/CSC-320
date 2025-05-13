@@ -4,10 +4,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Initialize GoogleGenerativeAI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Generate response from Gemini model
 export const generateGeminiResponse = async (
   prompt,
   responseType = "application/json"
@@ -34,7 +32,6 @@ export const generateGeminiResponse = async (
   }
 };
 
-// Generate questions from document content
 export const generateQuestions = async (content, numQuestions, difficulty) => {
   const prompt = `
     Based on the following document content:
@@ -57,7 +54,6 @@ export const generateQuestions = async (content, numQuestions, difficulty) => {
   return generateGeminiResponse(prompt);
 };
 
-// Validate user's answer
 export const validateAnswer = async (question, correctAnswer, userAnswer) => {
   const prompt = `
     Question: ${question}
@@ -77,7 +73,6 @@ export const validateAnswer = async (question, correctAnswer, userAnswer) => {
   return generateGeminiResponse(prompt);
 };
 
-// Generate RAG response
 export const generateRagResponse = async (query, context) => {
   const prompt = `
     Based on the following document content:
@@ -89,7 +84,7 @@ export const generateRagResponse = async (query, context) => {
     If the document content doesn't contain relevant information to answer the question,
     please respond with: "I don't have enough information from the provided documents to answer this question."
     
-    Format your response in a clear and concise manner.
+    Format your response in a clear and concise manner and please make sure it is in a text/plain format. Make sure you do not output markdown or application/json. Thank you.
   `;
 
   return generateGeminiResponse(prompt, "text/plain");

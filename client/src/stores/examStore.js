@@ -10,7 +10,6 @@ const useExamStore = create(
       examTimeSpent: 0,
       examDocumentId: null,
 
-      // Save exam results
       saveExamResults: (results, answers, questions, timeSpent, documentId) => {
         set({
           currentExamResults: results,
@@ -21,7 +20,6 @@ const useExamStore = create(
         });
       },
 
-      // Clear exam results
       clearExamResults: () => {
         set({
           currentExamResults: null,
@@ -33,7 +31,7 @@ const useExamStore = create(
       },
     }),
     {
-      name: "exam-storage", 
+      name: "exam-storage",
     }
   )
 );

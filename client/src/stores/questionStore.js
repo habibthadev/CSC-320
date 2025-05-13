@@ -11,7 +11,6 @@ const useQuestionStore = create((set, get) => ({
   isLoading: false,
   error: null,
 
-  // Generate questions from document
   generateQuestions: async (documentId, options) => {
     const token = useAuthStore.getState().token;
 
@@ -33,7 +32,6 @@ const useQuestionStore = create((set, get) => ({
         }
       );
 
-      // Store questions for this document
       set((state) => ({
         documentQuestions: {
           ...state.documentQuestions,
@@ -56,7 +54,6 @@ const useQuestionStore = create((set, get) => ({
     }
   },
 
-  // Get all questions
   getAllQuestions: async () => {
     const token = useAuthStore.getState().token;
 
@@ -91,7 +88,6 @@ const useQuestionStore = create((set, get) => ({
     }
   },
 
-  // Get questions by document
   getQuestionsByDocument: async (documentId) => {
     const token = useAuthStore.getState().token;
 
@@ -109,7 +105,6 @@ const useQuestionStore = create((set, get) => ({
         },
       });
 
-      // Store questions for this document
       set((state) => ({
         documentQuestions: {
           ...state.documentQuestions,
@@ -131,12 +126,10 @@ const useQuestionStore = create((set, get) => ({
     }
   },
 
-  // Fetch questions by document (alias for getQuestionsByDocument)
   fetchQuestionsByDocument: async (documentId) => {
     return get().getQuestionsByDocument(documentId);
   },
 
-  // Get question by ID
   getQuestionById: async (id) => {
     const token = useAuthStore.getState().token;
 
@@ -171,7 +164,6 @@ const useQuestionStore = create((set, get) => ({
     }
   },
 
-  // Validate a single answer
   validateAnswer: async (questionId, userAnswer) => {
     const token = useAuthStore.getState().token;
 
@@ -212,9 +204,6 @@ const useQuestionStore = create((set, get) => ({
     }
   },
 
-  // Validate an entire exam (multiple questions)
-  // Note: This requires a backend endpoint that doesn't exist yet
-  // Currently we use validateAnswer for each question instead
   validateExam: async (examData) => {
     const token = useAuthStore.getState().token;
 
@@ -226,7 +215,6 @@ const useQuestionStore = create((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      // This endpoint doesn't exist yet - would need to be implemented on the backend
       const response = await api.post(
         `/api/questions/validate-exam`,
         { answers: examData },
@@ -251,7 +239,6 @@ const useQuestionStore = create((set, get) => ({
     }
   },
 
-  // Delete question
   deleteQuestion: async (id) => {
     const token = useAuthStore.getState().token;
 
@@ -269,12 +256,9 @@ const useQuestionStore = create((set, get) => ({
         },
       });
 
-      // Remove question from lists
       set((state) => {
-        // Create new questions array without the deleted question
         const updatedQuestions = state.questions.filter((q) => q._id !== id);
 
-        // Create new documentQuestions object with the question removed from all document question lists
         const updatedDocumentQuestions = {};
         Object.keys(state.documentQuestions).forEach((docId) => {
           updatedDocumentQuestions[docId] = state.documentQuestions[
@@ -298,7 +282,6 @@ const useQuestionStore = create((set, get) => ({
     }
   },
 
-  // Clear current question
   clearCurrentQuestion: () => {
     set({
       currentQuestion: null,
@@ -306,7 +289,6 @@ const useQuestionStore = create((set, get) => ({
     });
   },
 
-  // Clear validation result
   clearValidationResult: () => {
     set({ validationResult: null });
   },

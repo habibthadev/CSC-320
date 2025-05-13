@@ -7,20 +7,15 @@ import {
   sendWelcomeEmail,
 } from "../utils/emailService.js";
 
-// @desc    Register user
-// @route   POST /api/auth/register
-// @access  Public
 export const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
-  // Check if user exists
   const userExists = await User.findOne({ email });
 
   if (userExists) {
     throw new AppError("User already exists", 400);
   }
 
-  // Create user
   const user = await User.create({
     name,
     email,
@@ -28,7 +23,6 @@ export const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
-    // Send welcome email
     await sendWelcomeEmail(email, name);
 
     res.status(201).json({
@@ -43,13 +37,9 @@ export const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
 export const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  // Check for user email
   const user = await User.findOne({ email }).select("+password");
 
   if (!user || !(await user.matchPassword(password))) {
@@ -65,9 +55,6 @@ export const loginUser = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Get user profile
-// @route   GET /api/auth/profile
-// @access  Private
 export const getUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -83,9 +70,6 @@ export const getUserProfile = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Update user profile
-// @route   PUT /api/auth/profile
-// @access  Private
 export const updateUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -110,25 +94,19 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Forgot password
-// @route   POST /api/auth/forgot-password
-// @access  Public
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  // Find user by email
   const user = await User.findOne({ email });
 
   if (!user) {
     throw new AppError("User with that email does not exist", 404);
   }
 
-  // Generate reset OTP
   const resetOTP = user.generateResetOTP();
   await user.save();
 
   try {
-    // Send email with reset OTP
     await sendPasswordResetEmail(user.email, resetOTP, user.name);
 
     res.json({
@@ -145,19 +123,14 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Verify OTP
-// @route   POST /api/auth/verify-otp
-// @access  Public
 export const verifyOTP = asyncHandler(async (req, res) => {
   const { email, otp } = req.body;
 
-  // Hash OTP
   const resetPasswordOTP = crypto
     .createHash("sha256")
     .update(otp)
     .digest("hex");
 
-  // Find user with matching OTP and non-expired OTP
   const user = await User.findOne({
     email,
     resetPasswordOTP,
@@ -175,19 +148,14 @@ export const verifyOTP = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Reset password
-// @route   POST /api/auth/reset-password
-// @access  Public
 export const resetPassword = asyncHandler(async (req, res) => {
   const { email, otp, password } = req.body;
 
-  // Hash OTP
   const resetPasswordOTP = crypto
     .createHash("sha256")
     .update(otp)
     .digest("hex");
 
-  // Find user with matching OTP and non-expired OTP
   const user = await User.findOne({
     email,
     resetPasswordOTP,
@@ -198,7 +166,6 @@ export const resetPassword = asyncHandler(async (req, res) => {
     throw new AppError("Invalid or expired OTP", 400);
   }
 
-  // Set new password
   user.password = password;
   user.resetPasswordOTP = undefined;
   user.resetPasswordOTPExpire = undefined;
@@ -212,9 +179,6 @@ export const resetPassword = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Refresh token
-// @route   POST /api/auth/refresh-token
-// @access  Public
 export const refreshToken = asyncHandler(async (req, res) => {
   const { refreshToken } = req.body;
 
@@ -223,10 +187,8 @@ export const refreshToken = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Verify refresh token
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
 
-    // Generate new access token
     const accessToken = generateToken(decoded.id);
 
     res.json({

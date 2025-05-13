@@ -17,7 +17,6 @@ const Tabs = ({
     onValueChange?.(newValue);
   };
 
-  // Filter out only TabsTrigger and TabsContent components
   const triggers = React.Children.toArray(children).filter(
     (child) => child.type.displayName === "TabsTrigger"
   );

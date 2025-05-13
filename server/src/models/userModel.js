@@ -35,7 +35,6 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Encrypt password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     next();
@@ -46,23 +45,18 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// Match password
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Generate and hash OTP for password reset
 userSchema.methods.generateResetOTP = function () {
-  // Generate a 6-digit OTP
   const resetOTP = Math.floor(100000 + Math.random() * 900000).toString();
 
-  // Hash the OTP
   this.resetPasswordOTP = crypto
     .createHash("sha256")
     .update(resetOTP)
     .digest("hex");
 
-  // Set OTP expiration to 10 minutes
   this.resetPasswordOTPExpire = Date.now() + 10 * 60 * 1000;
 
   return resetOTP;

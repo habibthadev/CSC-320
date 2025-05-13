@@ -28,7 +28,6 @@ const ExamView = () => {
   const { validateAnswer, isLoading } = useQuestionStore();
   const { saveExamResults } = useExamStore();
 
-  // Get questions from location state or fetch them
   const [questions, setQuestions] = useState(location.state?.questions || []);
   const [answers, setAnswers] = useState({});
   const [showSubmitModal, setShowSubmitModal] = useState(false);
@@ -40,7 +39,6 @@ const ExamView = () => {
   useEffect(() => {
     getDocumentById(documentId);
 
-    // Start the timer
     timerRef.current = setInterval(() => {
       setTimeSpent((prev) => prev + 1);
     }, 1000);
@@ -56,7 +54,6 @@ const ExamView = () => {
     }
   }, [questions]);
 
-  // If no questions were passed in location state, redirect back
   useEffect(() => {
     if (!location.state?.questions && !isLoading) {
       toast.error("No questions found. Please generate questions first.");
@@ -84,10 +81,8 @@ const ExamView = () => {
     setIsSubmitting(true);
 
     try {
-      // Validate each question individually using the existing API
       const validationResults = [];
 
-      // Process questions sequentially to avoid overwhelming the server
       for (const question of questions) {
         const { success, data, error } = await validateAnswer(
           question._id,
@@ -107,10 +102,8 @@ const ExamView = () => {
         }
       }
 
-      // Stop the timer when results are ready
       clearInterval(timerRef.current);
 
-      // Save results to the store
       saveExamResults(
         validationResults,
         answers,
@@ -119,7 +112,6 @@ const ExamView = () => {
         documentId
       );
 
-      // Navigate to results page
       toast.success("Exam submitted successfully");
       navigate(`/exam/results`);
     } catch (error) {

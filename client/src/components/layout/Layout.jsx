@@ -9,7 +9,6 @@ const Layout = () => {
   const { theme } = useThemeStore();
 
   useEffect(() => {
-    // Apply theme to document
     if (theme === "dark") {
       document.documentElement.classList.add("dark");
     } else {

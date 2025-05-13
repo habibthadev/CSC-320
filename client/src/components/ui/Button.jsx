@@ -14,11 +14,9 @@ const Button = ({
   icon: Icon,
   ...props
 }) => {
-  // Base classes
   const baseClasses =
     "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none";
 
-  // Size classes
   const sizeClasses = {
     sm: "h-9 px-3 text-xs",
     md: "h-10 py-2 px-4",
@@ -26,7 +24,6 @@ const Button = ({
     icon: "h-10 w-10",
   };
 
-  // Variant classes
   const variantClasses = {
     primary:
       "bg-orange-600 text-white hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700",
@@ -41,10 +38,8 @@ const Button = ({
       "bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700",
   };
 
-  // Combine classes
   const classes = `${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`;
 
-  // If it's a link
   if (to) {
     return (
       <Link to={to} className={classes} {...props}>
@@ -54,7 +49,6 @@ const Button = ({
     );
   }
 
-  // Regular button
   return (
     <button
       type={type}

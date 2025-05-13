@@ -9,7 +9,6 @@ const useRagStore = create((set, get) => ({
   isLoading: false,
   error: null,
 
-  // Chat with a single document
   chatWithDocument: async (documentId, query) => {
     const token = useAuthStore.getState().token;
 
@@ -35,7 +34,6 @@ const useRagStore = create((set, get) => ({
 
       const chatData = response.data.data;
 
-      // Add to chat history for this document
       set((state) => {
         const documentChat = state.chatHistory[documentId] || [];
 
@@ -65,7 +63,6 @@ const useRagStore = create((set, get) => ({
     }
   },
 
-  // Chat with multiple documents
   chatWithMultipleDocuments: async (documentIds, query) => {
     const token = useAuthStore.getState().token;
 
@@ -92,10 +89,8 @@ const useRagStore = create((set, get) => ({
 
       const chatData = response.data.data;
 
-      // Create a unique key for this multi-document chat
       const multiDocKey = `multi_${documentIds.sort().join("_")}`;
 
-      // Add to chat history for this multi-document combination
       set((state) => {
         const multiDocChat = state.chatHistory[multiDocKey] || [];
 
@@ -126,18 +121,15 @@ const useRagStore = create((set, get) => ({
     }
   },
 
-  // Get chat history for a document
   getChatHistoryForDocument: (documentId) => {
     return get().chatHistory[documentId] || [];
   },
 
-  // Get chat history for multiple documents
   getChatHistoryForMultipleDocuments: (documentIds) => {
     const multiDocKey = `multi_${documentIds.sort().join("_")}`;
     return get().chatHistory[multiDocKey] || [];
   },
 
-  // Clear chat history for a document
   clearChatHistoryForDocument: (documentId) => {
     set((state) => {
       const newChatHistory = { ...state.chatHistory };
@@ -147,17 +139,14 @@ const useRagStore = create((set, get) => ({
     });
   },
 
-  // Clear all chat history
   clearAllChatHistory: () => {
     set({ chatHistory: {} });
   },
 
-  // Clear chat history (alias for clearAllChatHistory)
   clearChatHistory: () => {
     set({ chatHistory: {} });
   },
 
-  // Clear current response
   clearCurrentResponse: () => {
     set({ currentResponse: null });
   },

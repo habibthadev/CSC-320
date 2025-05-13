@@ -1,4 +1,3 @@
-// Get file size in human-readable format
 export const formatFileSize = (bytes) => {
   if (bytes === 0) return "0 Bytes";
 
@@ -11,12 +10,10 @@ export const formatFileSize = (bytes) => {
   );
 };
 
-// Get file extension from filename
 export const getFileExtension = (filename) => {
   return filename.slice(((filename.lastIndexOf(".") - 1) >>> 0) + 2);
 };
 
-// Get file type icon based on file extension
 export const getFileTypeIcon = (filename) => {
   const extension = getFileExtension(filename).toLowerCase();
 
@@ -46,7 +43,6 @@ export const getFileTypeIcon = (filename) => {
   }
 };
 
-// Get file icon based on file type
 export const getFileIcon = (fileType) => {
   if (!fileType) return "file";
 
@@ -69,7 +65,6 @@ export const getFileIcon = (fileType) => {
   return "file";
 };
 
-// Format date to readable format
 export const formatDate = (dateString) => {
   if (!dateString) return "";
 
@@ -81,7 +76,6 @@ export const formatDate = (dateString) => {
   });
 };
 
-// Validate file type
 export const validateFileType = (file) => {
   const allowedTypes = [
     "application/pdf",
@@ -98,13 +92,11 @@ export const validateFileType = (file) => {
   return allowedTypes.includes(file.type);
 };
 
-// Validate file size (max 20MB)
 export const validateFileSize = (file) => {
-  const maxSize = 20 * 1024 * 1024; // 20MB
+  const maxSize = 20 * 1024 * 1024;
   return file.size <= maxSize;
 };
 
-// Validate file type
 export const isValidFileType = (file, allowedTypes) => {
   if (!allowedTypes || allowedTypes.length === 0) {
     return true;
@@ -114,7 +106,6 @@ export const isValidFileType = (file, allowedTypes) => {
   return allowedTypes.includes(fileType);
 };
 
-// Validate file size
 export const isValidFileSize = (file, maxSizeInBytes) => {
   if (!maxSizeInBytes) {
     return true;
@@ -123,12 +114,10 @@ export const isValidFileSize = (file, maxSizeInBytes) => {
   return file.size <= maxSizeInBytes;
 };
 
-// Create a preview URL for a file
 export const createFilePreviewUrl = (file) => {
   return URL.createObjectURL(file);
 };
 
-// Revoke a preview URL to free up memory
 export const revokeFilePreviewUrl = (url) => {
   URL.revokeObjectURL(url);
 };

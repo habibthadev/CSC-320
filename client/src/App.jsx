@@ -28,7 +28,6 @@ import TermsOfService from "./pages/legal/TermsOfService";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import NotFound from "./pages/errors/NotFound";
 
-
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
 
@@ -92,14 +91,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <DocumentEdit />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="chat"
-            element={
-              <ProtectedRoute>
-                <ChatView />
               </ProtectedRoute>
             }
           />

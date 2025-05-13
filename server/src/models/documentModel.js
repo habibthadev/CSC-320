@@ -43,7 +43,6 @@ const documentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Create index on extracted text for text search capabilities
 documentSchema.index({ extractedText: "text" });
 
 const Document = mongoose.model("Document", documentSchema);

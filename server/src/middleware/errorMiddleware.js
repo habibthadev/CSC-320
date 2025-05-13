@@ -1,4 +1,3 @@
-// Custom error class
 export class AppError extends Error {
   constructor(message, statusCode) {
     super(message);
@@ -10,7 +9,6 @@ export class AppError extends Error {
   }
 }
 
-// Error handler middleware
 export const errorHandler = (err, req, res, next) => {
   const statusCode = err.statusCode || 500;
 
@@ -23,7 +21,6 @@ export const errorHandler = (err, req, res, next) => {
   });
 };
 
-// Async handler to avoid try-catch blocks
 export const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };

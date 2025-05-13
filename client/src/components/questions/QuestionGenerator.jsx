@@ -415,7 +415,6 @@ const QuestionGenerator = () => {
         )}
       </div>
 
-      {/* Hidden PDF template for export */}
       <div className="hidden">
         <QuestionGeneratorPdf
           ref={targetRef}

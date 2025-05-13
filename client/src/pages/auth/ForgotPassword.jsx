@@ -277,7 +277,7 @@ const ForgotPassword = () => {
             <CardTitle className="text-2xl font-bold text-center flex-grow">
               {step === 4 ? "Success" : "Reset Password"}
             </CardTitle>
-            <div className="w-5"></div> {/* Spacer for centering */}
+            <div className="w-5"></div> 
           </div>
           {step < 4 && (
             <CardDescription className="text-center">

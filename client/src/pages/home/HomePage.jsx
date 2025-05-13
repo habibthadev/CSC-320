@@ -30,7 +30,7 @@ const HomePage = () => {
 
   return (
     <div>
-      {/* Hero Section */}
+      {}
       <section
         className="bg-gradient-to-b from-orange-50 to-white dark:from-gray-900 dark:to-gray-950 py-20"
         ref={heroRef}
@@ -75,7 +75,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Features Section */}
+      {}
       <section className="py-20 bg-white dark:bg-gray-950">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">
@@ -177,7 +177,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {}
       <section className="py-20 bg-orange-50 dark:bg-gray-900">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
@@ -189,7 +189,7 @@ const HomePage = () => {
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             {isAuthenticated ? (
               <Button to="/documents/upload" size="lg" icon={Upload}>
-                Upload Your First Document
+                Upload Your Document
               </Button>
             ) : (
               <Button to="/register" size="lg">
