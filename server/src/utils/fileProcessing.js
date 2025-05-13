@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 
 // const uploadsDir = path.join(__dirname, "../uploads");
 
-const uploadDir = '/tmp/uploads';
+const uploadsDir = path.join(os.tmpdir(), "uploads");
 
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
