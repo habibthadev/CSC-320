@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { connectDB } from "./config/db.js";
+// import { connectDB } from "./config/db.js";
 import { errorHandler } from "./middleware/errorMiddleware.js";
 import authRoutes from "./routes/authRoutes.js";
 import documentRoutes from "./routes/documentRoutes.js";
@@ -64,14 +64,27 @@ app.use("/api/rag", ragRoutes);
 
 app.use(errorHandler);
 
-app.listen(PORT, async () => {
-  try {
-    await connectDB();
-    console.log(`Server running on port ${PORT}`);
-  } catch (error) {
-    console.error("Failed to connect to the database:", error);
-    process.exit(1); // Exit the process with failure
-  }
-});
+// app.listen(PORT, async () => {
+//   try {
+//     await connectDB();
+//     console.log(`Server running on port ${PORT}`);
+//   } catch (error) {
+//     console.error("Failed to connect to the database:", error);
+//     process.exit(1); // Exit the process with failure
+//   }
+// });
+
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log("Connected to MongoDB");
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+    process.exit(1);
+  });
 
 export default app;
