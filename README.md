@@ -16,4 +16,4 @@ A powerful document processing backend with authentication, document storage, qu
   - Store and search documents
 
 - **Question Generation**
-  - Generate questions from
+  - Generate questions from documents. 
