@@ -107,7 +107,7 @@ const ProfileView = () => {
 
     if (success) {
       toast.success("Profile updated successfully");
-    } else {
+    } else if (error) {
       toast.error(error || "Failed to update profile");
     }
   };
@@ -128,7 +128,7 @@ const ProfileView = () => {
         newPassword: "",
         confirmPassword: "",
       });
-    } else {
+    } else if (error) {
       toast.error(error || "Failed to update password");
     }
   };

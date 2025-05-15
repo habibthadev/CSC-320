@@ -71,7 +71,7 @@ const Login = () => {
     if (success) {
       toast.success("Login successful!");
       navigate("/documents");
-    } else {
+    } else if (error) {
       toast.error(error || "Login failed. Please try again.");
     }
   };

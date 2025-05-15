@@ -145,7 +145,7 @@ const DocumentUpload = () => {
     if (success) {
       toast.success("Document uploaded successfully");
       navigate("/documents");
-    } else {
+    } else if (error) {
       toast.error(error || "Failed to upload document");
     }
   };
@@ -254,7 +254,6 @@ const DocumentUpload = () => {
               )}
 
               <Alert variant="info">
-                <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Processing Information</AlertTitle>
                 <AlertDescription>
                   Documents will be processed to extract text. For images, OCR

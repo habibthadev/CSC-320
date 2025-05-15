@@ -86,7 +86,7 @@ const ForgotPassword = () => {
     if (success) {
       toast.success("OTP sent to your email");
       setStep(2);
-    } else {
+    } else if (error) {
       toast.error(error || "Failed to send OTP. Please try again.");
     }
   };
@@ -101,7 +101,7 @@ const ForgotPassword = () => {
     if (success) {
       toast.success("OTP verified successfully");
       setStep(3);
-    } else {
+    } else if (error) {
       toast.error(error || "Invalid or expired OTP. Please try again.");
     }
   };
@@ -116,7 +116,7 @@ const ForgotPassword = () => {
     if (success) {
       toast.success("Password reset successful!");
       setStep(4);
-    } else {
+    } else if (error) {
       toast.error(error || "Failed to reset password. Please try again.");
     }
   };

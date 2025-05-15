@@ -170,7 +170,7 @@ const ExamView = () => {
             </CardHeader>
             <CardContent>
               <Alert>
-                <AlertCircle className="h-4 w-4" />
+        
                 <AlertTitle>Important</AlertTitle>
                 <AlertDescription>
                   Answer all {questions.length} questions. Once submitted, you

@@ -67,7 +67,7 @@ const DocumentList = () => {
 
     if (success) {
       toast.success("Document deleted successfully");
-    } else {
+    } else if (error) {
       toast.error(error || "Failed to delete document");
     }
 
@@ -80,7 +80,7 @@ const DocumentList = () => {
 
     if (success) {
       toast.success("Document vectorized successfully");
-    } else {
+    } else if (error) {
       toast.error(error || "Failed to vectorize document");
     }
   };

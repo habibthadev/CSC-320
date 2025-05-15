@@ -1,7 +1,7 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-// import pdfParse from "pdf-parse";
+import PDFParser from "pdf2json";
 import mammoth from "mammoth";
 import { createWorker } from "tesseract.js";
 import { fileURLToPath } from "url";
@@ -22,13 +22,47 @@ export const cleanText = (text) => {
   return text.replace(/\s\s+/g, " ").replace(/\n+/g, " ").trim();
 };
 
-export const extractTextFromPDF = async (buffer) => {
+// export const extractTextFromPDF = (buffer) => {
+//   return new Promise((resolve, reject) => {
+//     const pdfParser = new PDFParser();
+
+//     pdfParser.on("pdfParser_dataError", (errData) => {
+//       reject(
+//         new AppError(`Error extracting text: ${errData.parserError}`, 400)
+//       );
+//     });
+
+//     pdfParser.on("pdfParser_dataReady", (pdfData) => {
+//       const text = pdfData.formImage.Pages.map((page) =>
+//         page.Texts.map((t) =>
+//           decodeURIComponent(t.R.map((r) => r.T).join(""))
+//         ).join(" ")
+//       ).join("\n");
+//       resolve(text || "No text found in PDF.");
+//     });
+
+//     pdfParser.parseBuffer(buffer);
+//   });
+// };
+
+const extractTextFromPDF = async (buffer) => {
   try {
-    // const data = await pdfParse(buffer);
-    // return data.text || "No text found in PDF.";
-    return "No text found in PDF." 
+    return new Promise((resolve, reject) => {
+      const pdfParser = new PDFParser();
+
+      pdfParser.on("pdfParser_dataError", (error) => {
+        reject(new Error(`Error extracting text from PDF: ${error.message}`));
+      });
+
+      pdfParser.on("pdfParser_dataReady", (pdfData) => {
+        const text = pdfParser.getRawTextContent();
+        resolve(text || "No text found in PDF.");
+      });
+
+      pdfParser.parseBuffer(buffer);
+    });
   } catch (error) {
-    throw new AppError(`Error extracting text from PDF: ${error.message}`, 400);
+    throw new Error(`Error extracting text from PDF: ${error.message}`);
   }
 };
 

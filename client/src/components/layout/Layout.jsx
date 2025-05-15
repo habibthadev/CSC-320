@@ -27,10 +27,10 @@ const Layout = () => {
         position="top-right"
         toastOptions={{
           duration: 4000,
-          style: {
-            background: theme === "dark" ? "#333" : "#fff",
-            color: theme === "dark" ? "#fff" : "#333",
-          },
+          // style: {
+          //   background: theme === "dark" ? "#333" : "#fff",
+          //   color: theme === "dark" ? "#fff" : "#333",
+          // },
         }}
       />
     </div>

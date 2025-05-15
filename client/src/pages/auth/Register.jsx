@@ -87,7 +87,7 @@ const Register = () => {
     if (success) {
       toast.success("Registration successful!");
       navigate("/documents");
-    } else {
+    } else if (error) {
       toast.error(error || "Registration failed. Please try again.");
     }
   };

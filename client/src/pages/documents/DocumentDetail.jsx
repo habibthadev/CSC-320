@@ -68,7 +68,7 @@ const DocumentDetail = () => {
     if (success) {
       toast.success("Document deleted successfully");
       navigate("/documents");
-    } else {
+    } else if (error) {
       toast.error(error || "Failed to delete document");
       setShowDeleteModal(false);
     }
@@ -79,7 +79,7 @@ const DocumentDetail = () => {
 
     if (success) {
       toast.success("Document vectorized successfully");
-    } else {
+    } else if (error) {
       toast.error(error || "Failed to vectorize document");
     }
   };

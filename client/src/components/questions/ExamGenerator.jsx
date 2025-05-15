@@ -109,7 +109,7 @@ const ExamGenerator = () => {
       toast.success("Questions generated successfully");
 
       navigate(`/exam/${documentId}`, { state: { questions: data } });
-    } else {
+    } else if (error) {
       toast.error(error || "Failed to generate questions");
     }
   };

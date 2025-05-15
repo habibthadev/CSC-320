@@ -38,6 +38,9 @@ importers:
       nodemailer:
         specifier: ^6.10.1
         version: 6.10.1
+      pdf2json:
+        specifier: ^3.1.5
+        version: 3.1.5
       tesseract.js:
         specifier: ^6.0.1
         version: 6.0.1
@@ -536,6 +539,13 @@ packages:
   path-to-regexp@8.2.0:
     resolution: {integrity: sha512-TdrF7fW9Rphjq4RjrW0Kp2AW0Ahwu9sRGTkS6bvDi0SCwZlEZYmcfDbEsTz8RVk0EHIS/Vd1bv3JhG+1xZuAyQ==}
     engines: {node: '>=16'}
+
+  pdf2json@3.1.5:
+    resolution: {integrity: sha512-djZPInDLNuJU+o6GaJNvcoUh6MtUAx3IYTQCTxywHzeg1jC5YWgz/XzlgmduxxBblpMTqY2fjcWwvyRdGPTyrQ==}
+    engines: {node: '>=20.18.0', npm: '>=10.8.2'}
+    hasBin: true
+    bundledDependencies:
+      - '@xmldom/xmldom'
 
   picomatch@2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
@@ -1232,6 +1242,8 @@ snapshots:
   path-is-absolute@1.0.1: {}
 
   path-to-regexp@8.2.0: {}
+
+  pdf2json@3.1.5: {}
 
   picomatch@2.3.1: {}
 

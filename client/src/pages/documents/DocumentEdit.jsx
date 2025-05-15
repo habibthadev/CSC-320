@@ -68,7 +68,7 @@ const DocumentEdit = () => {
     if (success) {
       toast.success("Document updated successfully");
       navigate(`/documents/${id}`);
-    } else {
+    } else if (error) {
       toast.error(error || "Failed to update document");
     }
   };
