@@ -1,14 +1,12 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import PDFParser from "pdf2json";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const pdfParse = require("pdf-parse");
 import mammoth from "mammoth";
 import { createWorker } from "tesseract.js";
-import { fileURLToPath } from "url";
 import { AppError } from "../middleware/errorMiddleware.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // const uploadsDir = path.join(__dirname, "../uploads");
 
@@ -22,47 +20,16 @@ export const cleanText = (text) => {
   return text.replace(/\s\s+/g, " ").replace(/\n+/g, " ").trim();
 };
 
-// export const extractTextFromPDF = (buffer) => {
-//   return new Promise((resolve, reject) => {
-//     const pdfParser = new PDFParser();
-
-//     pdfParser.on("pdfParser_dataError", (errData) => {
-//       reject(
-//         new AppError(`Error extracting text: ${errData.parserError}`, 400)
-//       );
-//     });
-
-//     pdfParser.on("pdfParser_dataReady", (pdfData) => {
-//       const text = pdfData.formImage.Pages.map((page) =>
-//         page.Texts.map((t) =>
-//           decodeURIComponent(t.R.map((r) => r.T).join(""))
-//         ).join(" ")
-//       ).join("\n");
-//       resolve(text || "No text found in PDF.");
-//     });
-
-//     pdfParser.parseBuffer(buffer);
-//   });
-// };
-
 const extractTextFromPDF = async (buffer) => {
   try {
-    return new Promise((resolve, reject) => {
-      const pdfParser = new PDFParser();
+    if (!buffer) {
+      throw new AppError("No PDF buffer provided", 400);
+    }
 
-      pdfParser.on("pdfParser_dataError", (error) => {
-        reject(new Error(`Error extracting text from PDF: ${error.message}`));
-      });
-
-      pdfParser.on("pdfParser_dataReady", (pdfData) => {
-        const text = pdfParser.getRawTextContent();
-        resolve(text || "No text found in PDF.");
-      });
-
-      pdfParser.parseBuffer(buffer);
-    });
+    const data = await pdfParse(buffer);
+    return data.text || "No text found in PDF.";
   } catch (error) {
-    throw new Error(`Error extracting text from PDF: ${error.message}`);
+    throw new AppError(`Error extracting text from PDF: ${error.message}`, 400);
   }
 };
 

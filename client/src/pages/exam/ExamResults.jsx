@@ -133,20 +133,20 @@ const ExamResults = () => {
               icon={ArrowLeft}
               className="mr-4"
             >
-              Back to Document
+              {/* Back to Document */}
             </Button>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Exam Results
             </h1>
           </div>
-          <Button
+          {/* <Button
             variant="outline"
             size="sm"
             onClick={handleExportPdf}
             icon={FileDown}
           >
             Export PDF
-          </Button>
+          </Button> */}
         </div>
 
         <div ref={resultsRef}>
@@ -262,22 +262,26 @@ const ExamResults = () => {
             })}
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex justify-between md:flex-row flex-col items-center gap-2">
             <Button
               variant="outline"
               onClick={() => navigate(`/documents/${documentId}`)}
+              className="w-full md:w-auto"
             >
               Back to Document
             </Button>
-            <div className="flex space-x-2">
+            <div className="flex space-y-2 md:space-x-2 md:flex-row flex-col w-full md:w-auto">
               <Button
                 variant="outline"
                 onClick={handleExportPdf}
                 icon={FileDown}
+                className="w-full md:w-auto"
               >
                 Export PDF
               </Button>
-              <Button onClick={handleTakeNewExam}>Take New Exam</Button>
+              <Button onClick={handleTakeNewExam} className="w-full md:w-auto">
+                Take New Exam
+              </Button>
             </div>
           </div>
         </div>

@@ -140,13 +140,13 @@ const DocumentUpload = () => {
       formData.append("title", title);
     }
 
-    const { success, error } = await uploadDocument(formData);
+    const { data } = await uploadDocument(formData);
 
-    if (success) {
+    if (!data) {
       toast.success("Document uploaded successfully");
       navigate("/documents");
-    } else if (error) {
-      toast.error(error || "Failed to upload document");
+    } else {
+      toast.error("Failed to upload document");
     }
   };
 
@@ -232,8 +232,10 @@ const DocumentUpload = () => {
                         <div className="flex items-center space-x-3">
                           {getFileIcon(file)}
                           <div>
-                            <p className="font-medium text-gray-900 dark:text-white truncate max-w-xs">
-                              {file.name}
+                            <p className="font-medium text-gray-900 dark:text-white md:max-w-xs">
+                              {file.name.length > 20
+                                ? `${file.name.slice(0, 20)}...`
+                                : file.name}
                             </p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                               {formatFileSize(file.size)}

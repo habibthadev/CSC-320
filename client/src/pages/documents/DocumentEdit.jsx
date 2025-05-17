@@ -63,9 +63,9 @@ const DocumentEdit = () => {
 
     if (!validate()) return;
 
-    const { success, error } = await updateDocument(id, { title });
+    const { isLoading: isPending, error } = await updateDocument(id, { title });
 
-    if (success) {
+    if (!isPending && !error) {
       toast.success("Document updated successfully");
       navigate(`/documents/${id}`);
     } else if (error) {
@@ -92,7 +92,7 @@ const DocumentEdit = () => {
             icon={ArrowLeft}
             className="mr-4"
           >
-            Back to Document
+            {/* Back to Document */}
           </Button>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Edit Document
@@ -135,7 +135,7 @@ const DocumentEdit = () => {
                       <span className="text-gray-500 dark:text-gray-400">
                         File Type:
                       </span>
-                      <p className="text-gray-900 dark:text-white">
+                      <p className="text-gray-900 dark:text-white truncate">
                         {currentDocument.fileType}
                       </p>
                     </div>

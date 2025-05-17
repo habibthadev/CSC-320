@@ -27,7 +27,7 @@ const Alert = ({ children, variant = "default", className = "", ...props }) => {
       {...props}
     >
       <div className="flex items-start gap-4">
-        {Icon && <Icon className="h-5 w-5" />}
+        {Icon && <Icon className="h-5 w-5 flex-shrink-0" />}
         <div>{children}</div>
       </div>
     </div>

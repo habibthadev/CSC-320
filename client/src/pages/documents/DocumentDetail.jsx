@@ -113,9 +113,9 @@ const DocumentDetail = () => {
             size="sm"
             onClick={() => navigate("/documents")}
             icon={ArrowLeft}
-            className="mr-4"
+            className="mr-4 flex-shrink-0"
           >
-            Back to Documents
+            {/* Back to Documents */}
           </Button>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white truncate">
             {currentDocument.title}
@@ -196,7 +196,7 @@ const DocumentDetail = () => {
                     <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       File Type
                     </h4>
-                    <p className="text-gray-900 dark:text-white">
+                    <p className="text-gray-900 dark:text-white truncate">
                       {currentDocument.fileType}
                     </p>
                   </div>

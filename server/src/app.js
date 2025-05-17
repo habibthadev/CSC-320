@@ -89,7 +89,6 @@
 
 // export default app;
 
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -110,7 +109,7 @@ async function connectToDatabase() {
     console.log("Using cached database connection");
     return cachedDb;
   }
-  
+
   console.log("Creating new database connection");
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -119,20 +118,20 @@ async function connectToDatabase() {
       socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
       maxPoolSize: 10, // Maintain up to 10 socket connections
     });
-    
+
     cachedDb = mongoose.connection;
-    
+
     // Handle connection events
     cachedDb.on("error", (err) => {
       console.error("MongoDB connection error:", err);
       cachedDb = null;
     });
-    
+
     cachedDb.on("disconnected", () => {
       console.log("MongoDB disconnected");
       cachedDb = null;
     });
-    
+
     console.log("Connected to MongoDB");
     return cachedDb;
   } catch (error) {
@@ -166,7 +165,7 @@ app.get("/health", async (req, res) => {
   try {
     // Ensure database is connected
     await connectToDatabase();
-    
+
     // Check the database connection state
     const dbState = mongoose.connection.readyState;
     const states = ["Disconnected", "Connected", "Connecting", "Disconnecting"];
@@ -208,9 +207,9 @@ app.use(errorHandler);
 const initializeServer = async () => {
   try {
     await connectToDatabase();
-    
+
     // Only start listening if not in a serverless environment
-    if (process.env.NODE_ENV !== 'serverless') {
+    if (process.env.NODE_ENV !== "serverless") {
       app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
       });
@@ -222,6 +221,6 @@ const initializeServer = async () => {
 };
 
 // Start the server if not being imported (e.g. for tests)
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== "test") {
   initializeServer();
 }

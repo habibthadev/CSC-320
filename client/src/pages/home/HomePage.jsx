@@ -49,16 +49,16 @@ const HomePage = () => {
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             {isAuthenticated ? (
               <>
-                <Button to="/documents" size="lg" icon={FileText}>
-                  My Documents
+                <Button to="/documents/upload" size="lg" icon={FileText}>
+                  Upload Document
                 </Button>
                 <Button
-                  to="/documents/upload"
+                  to="/documents"
                   variant="outline"
                   size="lg"
                   icon={Upload}
                 >
-                  Upload Document
+                  My Documents
                 </Button>
               </>
             ) : (

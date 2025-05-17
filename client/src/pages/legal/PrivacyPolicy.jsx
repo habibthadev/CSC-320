@@ -48,7 +48,7 @@ const PrivacyPolicy = () => {
           </CardHeader>
           <CardContent className="prose dark:prose-invert max-w-none">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Last Updated: April 24, 2023
+              Last Updated: April 24, {new Date().getFullYear()}
             </p>
 
             <h2>1. Introduction</h2>

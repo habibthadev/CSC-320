@@ -63,9 +63,11 @@ const DocumentList = () => {
   const handleDelete = async () => {
     if (!documentToDelete) return;
 
-    const { success, error } = await deleteDocument(documentToDelete._id);
+    const { isLoading: isPending, error } = await deleteDocument(
+      documentToDelete._id
+    );
 
-    if (success) {
+    if (!isPending && !error) {
       toast.success("Document deleted successfully");
     } else if (error) {
       toast.error(error || "Failed to delete document");
@@ -76,9 +78,9 @@ const DocumentList = () => {
   };
 
   const handleVectorize = async (id) => {
-    const { success, error } = await vectorizeDocument(id);
+    const { isLoading: isPending, error } = await vectorizeDocument(id);
 
-    if (success) {
+    if (!isPending && !error) {
       toast.success("Document vectorized successfully");
     } else if (error) {
       toast.error(error || "Failed to vectorize document");
