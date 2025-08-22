@@ -54,7 +54,14 @@ export const extractTextFromTxt = (buffer) => {
 };
 
 export const extractTextFromImage = async (buffer, mimetype) => {
-  const worker = await createWorker("eng");
+  const worker = await createWorker({
+    logger: (m) => console.log(m),
+    corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@6.0.0/tesseract-core-simd.js',
+    langPath: 'https://tessdata.projectnaptha.com/4.0.0_best'
+  });
+  await worker.loadLanguage('eng');
+  await worker.initialize('eng');
+
   const supportedFormats = [
     "image/png",
     "image/jpg",
