@@ -1,14 +1,27 @@
 import nodemailer from "nodemailer";
-import { config } from "dotenv" 
-
-config()
+import {
+  EMAIL_HOST,
+  EMAIL_PORT,
+  EMAIL_USER,
+  EMAIL_PASS,
+  EMAIL_FROM,
+} from "../config/env.js";
 
 export const createTransporter = () => {
+  if (!EMAIL_HOST || !EMAIL_USER || !EMAIL_PASS) {
+    console.warn(
+      "Email configuration incomplete. Email features will be disabled."
+    );
+    return null;
+  }
+
   return nodemailer.createTransport({
-    service: "gmail",
+    host: EMAIL_HOST,
+    port: EMAIL_PORT || 587,
+    secure: EMAIL_PORT === 465,
     auth: {
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD,
+      user: EMAIL_USER,
+      pass: EMAIL_PASS,
     },
   });
 };
@@ -16,8 +29,13 @@ export const createTransporter = () => {
 export const sendEmail = async (options) => {
   const transporter = createTransporter();
 
+  if (!transporter) {
+    console.warn("Email service not configured. Skipping email send.");
+    return { skipped: true };
+  }
+
   const mailOptions = {
-    from: `${process.env.FROM_NAME} <${process.env.EMAIL_USERNAME}>`,
+    from: EMAIL_FROM || `Haskmee <${EMAIL_USER}>`,
     to: options.email,
     subject: options.subject,
     html: options.html,
@@ -41,7 +59,7 @@ export const sendPasswordResetEmail = async (email, otp, name) => {
         </div>
         <p>This OTP is valid for 10 minutes.</p>
         <p>If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
-        <p>Best regards,<br/>Your App Team</p>
+        <p>Best regards,<br/>Haskmee Team</p>
       </div>
     `,
   });
@@ -50,20 +68,22 @@ export const sendPasswordResetEmail = async (email, otp, name) => {
 export const sendWelcomeEmail = async (email, name) => {
   return sendEmail({
     email,
-    subject: "Welcome to our platform!",
+    subject: "Welcome to Haskmee!",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
-        <h2 style="color: #333;">Welcome to Our Platform!</h2>
+        <h2 style="color: #333;">Welcome to Haskmee!</h2>
         <p>Hello ${name},</p>
-        <p>Thank you for registering with us. We're excited to have you on board!</p>
-        <p>With our platform, you can:</p>
+        <p>Welcome to our document processing and question generation platform! We're excited to have you on board.</p>
+        <p>Here's what you can do with your account:</p>
         <ul>
-          <li>Upload documents and extract information</li>
+          <li>Upload documents (PDF, DOCX, images)</li>
           <li>Generate questions from your documents</li>
-          <li>Chat with your documents using RAG technology</li>
+          <li>Chat with your documents using AI</li>
+          <li>Create custom exams and quizzes</li>
         </ul>
-        <p>If you have any questions or need assistance, don't hesitate to contact our support team.</p>
-        <p>Best regards,<br/>Your App Team</p>
+        <p>Get started by logging into your account and uploading your first document.</p>
+        <p>If you have any questions, feel free to reach out to our support team.</p>
+        <p>Best regards,<br/>Haskmee Team</p>
       </div>
     `,
   });

@@ -2,11 +2,13 @@ import express from "express";
 import {
   chatWithDocument,
   chatWithMultipleDocuments,
-} from "../controllers/ragController.js";
-import { protect } from "../middleware/authMiddleware.js";
+  generalChat,
+} from "../controllers/rag.controller.js";
+import { protect, optionalAuth } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
+router.post("/general-chat", optionalAuth, generalChat);
 router.use(protect);
 
 router.post("/chat", chatWithMultipleDocuments);

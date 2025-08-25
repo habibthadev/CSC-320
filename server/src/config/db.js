@@ -1,48 +1,39 @@
+import { MONGODB_URI } from "./env.js";
 import mongoose from "mongoose";
-import { config } from "dotenv";
 
-config();
+let cachedDb = null;
 
-export const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`Error connecting to MongoDB: ${error.message}`);
-    process.exit(1);
+export async function connectToDatabase() {
+  if (cachedDb && mongoose.connection.readyState === 1) {
+    return cachedDb;
   }
-};
 
-// import mongoose from 'mongoose';
-// import dotenv from "dotenv";
+  try {
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 5,
+      minPoolSize: 1,
+      maxIdleTimeMS: 30000,
+      bufferCommands: false,
+      // bufferMaxEntries: 0,
+    });
 
-// dotenv.config();
+    cachedDb = mongoose.connection;
 
-// export const connectDB = () => {
-//   mongoose
-//     .connect(process.env.MONGODB_URI)
-//     .then(() => console.log('Database successfully connected'))
-//     .catch((err) => {
-//       console.log(`You have this error ${err}`);
-//       console.log('Retrying connection in 5 seconds...');
-//       setTimeout(connectDB, 5000);
-//     });
+    cachedDb.on("error", (err) => {
+      console.error("MongoDB connection error:", err);
+      cachedDb = null;
+    });
 
-//   mongoose.connection.on('connected', () => {
-//     console.log('Mongoose connected to DB');
-//   });
+    cachedDb.on("disconnected", () => {
+      console.log("MongoDB disconnected");
+      cachedDb = null;
+    });
 
-//   mongoose.connection.on('error', (err) => {
-//     console.error(`Mongoose connection error: ${err}`);
-//   });
-
-//   mongoose.connection.on('disconnected', () => {
-//     console.log('Mongoose disconnected');
-//   });
-
-//   process.on('SIGINT', gracefulExit).on('SIGTERM', gracefulExit);
-
-//   function gracefulExit() {
-//     mongoose.connection.close(true);
-//   }
-// };
+    return cachedDb;
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    throw error;
+  }
+}

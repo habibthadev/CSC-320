@@ -6,14 +6,16 @@ import {
   getAllQuestions,
   getQuestionById,
   deleteQuestion,
-} from "../controllers/questionController.js";
-import { protect } from "../middleware/authMiddleware.js";
+  bulkDeleteQuestions,
+} from "../controllers/question.controller.js";
+import { protect } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
 router.use(protect);
 
 router.get("/", getAllQuestions);
+router.post("/bulk-delete", bulkDeleteQuestions);
 router.get("/document/:documentId", getQuestionsByDocument);
 router.post("/generate/:documentId", generateQuestionsFromDocument);
 

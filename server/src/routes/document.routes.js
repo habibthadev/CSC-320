@@ -5,19 +5,26 @@ import {
   getDocumentById,
   updateDocument,
   deleteDocument,
+  bulkDeleteDocuments,
   vectorizeDocument,
   searchDocuments,
+  getDocumentStats,
   upload,
-} from "../controllers/documentController.js";
-import { protect } from "../middleware/authMiddleware.js";
+} from "../controllers/document.controller.js";
+import { protect } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
 router.use(protect);
 
-router.route("/").get(getDocuments).post(upload.array("files"), uploadDocument);
+router
+  .route("/")
+  .get(getDocuments)
+  .post(upload.array("files", 5), uploadDocument);
 
+router.get("/stats", getDocumentStats);
 router.get("/search", searchDocuments);
+router.post("/bulk-delete", bulkDeleteDocuments);
 
 router
   .route("/:id")
