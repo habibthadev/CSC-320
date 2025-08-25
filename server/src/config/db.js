@@ -16,7 +16,6 @@ export async function connectToDatabase() {
       minPoolSize: 1,
       maxIdleTimeMS: 30000,
       bufferCommands: false,
-      // bufferMaxEntries: 0,
     });
 
     cachedDb = mongoose.connection;

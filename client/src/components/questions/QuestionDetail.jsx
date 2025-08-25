@@ -25,14 +25,14 @@ import {
 } from "../ui/Card";
 import Badge from "../ui/Badge";
 import { Alert, AlertTitle, AlertDescription } from "../ui/Alert";
-import useQuestionStore from "../../stores/questionStore";
+import { useQuestion, useValidateAnswer } from "../../hooks/useQuestions";
 import { fadeIn } from "../../utils/animations";
 
 const QuestionDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getQuestionById, validateAnswer, currentQuestion, isLoading } =
-    useQuestionStore();
+  const { data: question, isLoading, error } = useQuestion(id);
+  const validateAnswerMutation = useValidateAnswer();
   const [userAnswer, setUserAnswer] = useState("");
   const [validation, setValidation] = useState(null);
   const [errors, setErrors] = useState({});
@@ -44,14 +44,10 @@ const QuestionDetail = () => {
   });
 
   useEffect(() => {
-    getQuestionById(id);
-  }, [id, getQuestionById]);
-
-  useEffect(() => {
     if (questionRef.current) {
       fadeIn(questionRef.current, 0.2);
     }
-  }, [currentQuestion]);
+  }, [question]);
 
   useEffect(() => {
     if (validation && resultRef.current) {
@@ -70,19 +66,23 @@ const QuestionDetail = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!validate()) return;
 
-    const { success, error, data } = await validateAnswer(id, userAnswer);
-
-    if (success) {
-      setValidation(data);
-      toast.success("Answer submitted successfully");
-    } else {
-      toast.error(error || "Failed to validate answer");
-    }
+    validateAnswerMutation.mutate(
+      { questionId: id, answer: userAnswer },
+      {
+        onSuccess: (data) => {
+          setValidation(data);
+          toast.success("Answer submitted successfully");
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to validate answer");
+        },
+      }
+    );
   };
 
   const handleTryAgain = () => {
@@ -91,7 +91,7 @@ const QuestionDetail = () => {
   };
 
   const handleExportPdf = () => {
-    if (!currentQuestion || !validation) {
+    if (!question || !validation) {
       toast.error("Cannot export PDF without a validated answer");
       return;
     }
@@ -105,10 +105,28 @@ const QuestionDetail = () => {
     }
   };
 
-  if (isLoading || !currentQuestion) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+
+  if (error || !question) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Question Not Found
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            The question you're looking for doesn't exist or has been deleted.
+          </p>
+          <Button onClick={() => navigate("/documents")}>
+            Back to Documents
+          </Button>
+        </div>
       </div>
     );
   }
@@ -121,9 +139,7 @@ const QuestionDetail = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() =>
-                navigate(`/documents/${currentQuestion?.document}`)
-              }
+              onClick={() => navigate(`/documents/${question?.document}`)}
               icon={ArrowLeft}
               className="mr-4"
             >
@@ -133,13 +149,11 @@ const QuestionDetail = () => {
               Question
             </h1>
           </div>
-          {currentQuestion && (
+          {question && (
             <Button
               variant="outline"
               size="sm"
-              onClick={() =>
-                navigate(`/questions/list/${currentQuestion.document}`)
-              }
+              onClick={() => navigate(`/questions/list/${question.document}`)}
               icon={List}
             >
               All Questions
@@ -153,19 +167,19 @@ const QuestionDetail = () => {
               <CardTitle>Question</CardTitle>
               <Badge
                 variant={
-                  currentQuestion.difficulty === "easy"
+                  question.difficulty === "easy"
                     ? "success"
-                    : currentQuestion.difficulty === "medium"
+                    : question.difficulty === "medium"
                     ? "warning"
                     : "danger"
                 }
               >
-                {currentQuestion.difficulty}
+                {question.difficulty}
               </Badge>
             </div>
-            {currentQuestion.tags && currentQuestion.tags.length > 0 && (
+            {question.tags && question.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
-                {currentQuestion.tags.map((tag) => (
+                {question.tags.map((tag) => (
                   <Badge key={tag} variant="secondary">
                     {tag}
                   </Badge>
@@ -175,7 +189,7 @@ const QuestionDetail = () => {
           </CardHeader>
           <CardContent>
             <p className="text-lg text-gray-900 dark:text-white">
-              {currentQuestion.question}
+              {question.question}
             </p>
           </CardContent>
         </Card>
@@ -238,7 +252,7 @@ const QuestionDetail = () => {
                 <Button
                   variant="outline"
                   onClick={() =>
-                    navigate(`/questions/list/${currentQuestion.document}`)
+                    navigate(`/questions/list/${question.document}`)
                   }
                   icon={List}
                 >
@@ -254,9 +268,7 @@ const QuestionDetail = () => {
                   Export PDF
                 </Button>
                 <Button
-                  onClick={() =>
-                    navigate(`/documents/${currentQuestion.document}`)
-                  }
+                  onClick={() => navigate(`/documents/${question.document}`)}
                 >
                   Back to Document
                 </Button>
@@ -301,9 +313,7 @@ const QuestionDetail = () => {
             <CardFooter className="flex justify-between">
               <Button
                 variant="outline"
-                onClick={() =>
-                  navigate(`/documents/${currentQuestion.document}`)
-                }
+                onClick={() => navigate(`/documents/${question.document}`)}
               >
                 Cancel
               </Button>
@@ -323,7 +333,7 @@ const QuestionDetail = () => {
         <div className="hidden">
           <QuestionAnswerPdf
             ref={targetRef}
-            question={currentQuestion}
+            question={question}
             userAnswer={userAnswer}
             validation={validation}
           />

@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserPlus, User, Mail, Lock } from "lucide-react";
-import { toast } from "react-hot-toast";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Label from "../../components/ui/Label";
@@ -13,7 +12,7 @@ import {
   CardContent,
   CardFooter,
 } from "../../components/ui/Card";
-import useAuthStore from "../../stores/authStore";
+import { useRegister, useAuth } from "../../hooks/useAuth";
 import { fadeIn } from "../../utils/animations";
 
 const Register = () => {
@@ -24,17 +23,16 @@ const Register = () => {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
-  const { register, isLoading, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const formRef = useRef(null);
 
+  const { isAuthenticated } = useAuth();
+  const registerMutation = useRegister();
+
+
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/documents");
-    }
-
-    if (formRef.current) {
-      fadeIn(formRef.current, 0.2);
+      navigate("/documents", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -71,6 +69,12 @@ const Register = () => {
       ...prev,
       [name]: value,
     }));
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -78,18 +82,11 @@ const Register = () => {
 
     if (!validate()) return;
 
-    const { success, error } = await register({
+    registerMutation.mutate({
       name: formData.name,
       email: formData.email,
       password: formData.password,
     });
-
-    if (success) {
-      toast.success("Registration successful!");
-      navigate("/documents");
-    } else if (error) {
-      toast.error(error || "Registration failed. Please try again.");
-    }
   };
 
   return (
@@ -179,7 +176,7 @@ const Register = () => {
             <Button
               type="submit"
               className="w-full"
-              isLoading={isLoading}
+              isLoading={registerMutation.isPending}
               icon={UserPlus}
             >
               Register

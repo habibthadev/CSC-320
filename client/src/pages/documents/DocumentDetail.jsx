@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -22,72 +22,80 @@ import {
 import Badge from "../../components/ui/Badge";
 import Modal from "../../components/ui/Modal";
 import { Tabs, TabsTrigger, TabsContent } from "../../components/ui/Tabs";
-import useDocumentStore from "../../stores/documentStore";
-import useQuestionStore from "../../stores/questionStore";
+import {
+  useDocument,
+  useDeleteDocument,
+  useVectorizeDocument,
+} from "../../hooks/useDocuments";
+import { useQuestionsByDocument } from "../../hooks/useQuestions";
 import { formatFileSize, formatDate, getFileIcon } from "../../utils/fileUtils";
 import { fadeIn } from "../../utils/animations";
 
 const DocumentDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const {
-    getDocumentById,
-    deleteDocument,
-    vectorizeDocument,
-    isLoading,
-    currentDocument,
-    clearCurrentDocument,
-  } = useDocumentStore();
-  const {
-    fetchQuestionsByDocument,
-    questions,
-    isLoading: questionsLoading,
-  } = useQuestionStore();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
   const contentRef = useRef(null);
 
-  useEffect(() => {
-    getDocumentById(id);
-    fetchQuestionsByDocument(id);
-
-    return () => {
-      clearCurrentDocument();
-    };
-  }, [id, getDocumentById, fetchQuestionsByDocument, clearCurrentDocument]);
+  const { data: document, isLoading, error } = useDocument(id);
+  const { data: questions = [], isLoading: questionsLoading } =
+    useQuestionsByDocument(id);
+  const deleteDocumentMutation = useDeleteDocument();
+  const vectorizeDocumentMutation = useVectorizeDocument();
 
   useEffect(() => {
-    if (currentDocument && contentRef.current) {
+    if (document && contentRef.current) {
       fadeIn(contentRef.current, 0.2);
     }
-  }, [currentDocument, activeTab]);
+  }, [document, activeTab]);
 
-  const handleDelete = async () => {
-    const { success, error } = await deleteDocument(id);
-
-    if (success) {
-      toast.success("Document deleted successfully");
-      navigate("/documents");
-    } else if (error) {
-      toast.error(error || "Failed to delete document");
-      setShowDeleteModal(false);
-    }
+  const handleDelete = () => {
+    deleteDocumentMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success("Document deleted successfully");
+        navigate("/documents");
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to delete document");
+        setShowDeleteModal(false);
+      },
+    });
   };
 
-  const handleVectorize = async () => {
-    const { success, error } = await vectorizeDocument(id);
-
-    if (success) {
-      toast.success("Document vectorized successfully");
-    } else if (error) {
-      toast.error(error || "Failed to vectorize document");
-    }
+  const handleVectorize = () => {
+    vectorizeDocumentMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success("Document vectorized successfully");
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to vectorize document");
+      },
+    });
   };
 
-  if (isLoading || !currentDocument) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+
+  if (error || !document) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Document Not Found
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            The document you're looking for doesn't exist or has been deleted.
+          </p>
+          <Button onClick={() => navigate("/documents")}>
+            Back to Documents
+          </Button>
+        </div>
       </div>
     );
   }
@@ -114,16 +122,14 @@ const DocumentDetail = () => {
             onClick={() => navigate("/documents")}
             icon={ArrowLeft}
             className="mr-4 flex-shrink-0"
-          >
-            {/* Back to Documents */}
-          </Button>
+          ></Button>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white truncate">
-            {currentDocument.title}
+            {document.title}
           </h1>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <Button to={`/documents/edit/${id}`} variant="outline" icon={Edit}>
+          <Button to={`/documents/${id}/edit`} variant="outline" icon={Edit}>
             Edit
           </Button>
           <Button
@@ -136,15 +142,15 @@ const DocumentDetail = () => {
           <Button to={`/chat/${id}`} icon={MessageSquare}>
             Chat with Document
           </Button>
-          <Button to={`/exam/generate/${id}`} icon={Sparkles}>
+          <Button to={`/generate/${id}`} icon={Sparkles}>
             Generate Exam
           </Button>
-          {!currentDocument.vectorized && (
+          {!document.vectorized && (
             <Button
               variant="secondary"
               onClick={handleVectorize}
               icon={Database}
-              isLoading={isLoading}
+              isLoading={vectorizeDocumentMutation.isPending}
             >
               Vectorize
             </Button>
@@ -179,14 +185,14 @@ const DocumentDetail = () => {
               <CardContent className="space-y-6">
                 <div className="flex items-center space-x-4">
                   <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900">
-                    {renderDocumentIcon(currentDocument.fileType)}
+                    {renderDocumentIcon(document.fileType)}
                   </div>
                   <div>
                     <h3 className="text-xl font-medium text-gray-900 dark:text-white">
-                      {currentDocument.title}
+                      {document.title}
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400">
-                      {currentDocument.originalFileName}
+                      {document.originalFileName}
                     </p>
                   </div>
                 </div>
@@ -197,7 +203,7 @@ const DocumentDetail = () => {
                       File Type
                     </h4>
                     <p className="text-gray-900 dark:text-white truncate">
-                      {currentDocument.fileType}
+                      {document.fileType}
                     </p>
                   </div>
                   <div>
@@ -205,7 +211,7 @@ const DocumentDetail = () => {
                       File Size
                     </h4>
                     <p className="text-gray-900 dark:text-white">
-                      {formatFileSize(currentDocument.fileSize)}
+                      {formatFileSize(document.fileSize)}
                     </p>
                   </div>
                   <div>
@@ -213,7 +219,7 @@ const DocumentDetail = () => {
                       Upload Date
                     </h4>
                     <p className="text-gray-900 dark:text-white">
-                      {formatDate(currentDocument.createdAt)}
+                      {formatDate(document.createdAt)}
                     </p>
                   </div>
                   <div>
@@ -221,7 +227,7 @@ const DocumentDetail = () => {
                       Status
                     </h4>
                     <div className="mt-1">
-                      {currentDocument.vectorized ? (
+                      {document.vectorized ? (
                         <Badge variant="success">Vectorized</Badge>
                       ) : (
                         <Badge variant="warning">Not Vectorized</Badge>
@@ -246,7 +252,7 @@ const DocumentDetail = () => {
               <CardContent>
                 <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg max-h-96 overflow-y-auto">
                   <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 dark:text-gray-200">
-                    {currentDocument.extractedText || "No content available"}
+                    {document.extractedText || "No content available"}
                   </pre>
                 </div>
               </CardContent>
@@ -257,7 +263,7 @@ const DocumentDetail = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Generated Questions</CardTitle>
-                <Button to={`/exam/generate/${id}`} size="sm" icon={Sparkles}>
+                <Button to={`/generate/${id}`} size="sm" icon={Sparkles}>
                   Generate Exam
                 </Button>
               </CardHeader>
@@ -272,7 +278,7 @@ const DocumentDetail = () => {
                       No questions have been generated for this document yet.
                     </p>
                     <Button
-                      to={`/exam/generate/${id}`}
+                      to={`/generate/${id}`}
                       className="mt-4"
                       icon={Sparkles}
                     >
@@ -316,7 +322,7 @@ const DocumentDetail = () => {
                     ))}
                     {questions.length > 5 && (
                       <div className="text-center mt-4">
-                        <Button to={`/exam/generate/${id}`} variant="outline">
+                        <Button to={`/generate/${id}`} variant="outline">
                           Generate New Exam
                         </Button>
                       </div>
@@ -335,8 +341,8 @@ const DocumentDetail = () => {
         >
           <div className="space-y-4">
             <p className="text-gray-700 dark:text-gray-300">
-              Are you sure you want to delete "{currentDocument.title}"? This
-              action cannot be undone.
+              Are you sure you want to delete "{document.title}"? This action
+              cannot be undone.
             </p>
             <div className="flex justify-end space-x-2">
               <Button
@@ -348,7 +354,7 @@ const DocumentDetail = () => {
               <Button
                 variant="danger"
                 onClick={handleDelete}
-                isLoading={isLoading}
+                isLoading={deleteDocumentMutation.isPending}
               >
                 Delete
               </Button>

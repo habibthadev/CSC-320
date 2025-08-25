@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { usePDF } from "react-to-pdf";
@@ -19,8 +19,7 @@ import {
   CardContent,
 } from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
-import useExamStore from "../../stores/examStore";
-import useDocumentStore from "../../stores/documentStore";
+import { useDocument } from "../../hooks/useDocuments";
 import { fadeIn } from "../../utils/animations";
 
 const ErrorFallback = ({ error, resetErrorBoundary }) => {
@@ -59,38 +58,37 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => {
 
 const ExamResults = () => {
   const navigate = useNavigate();
-  const {
-    currentExamResults: results,
-    examAnswers: answers,
-    examQuestions: questions,
-    examTimeSpent: timeSpent,
-    examDocumentId: documentId,
-    clearExamResults,
-  } = useExamStore();
-  const { getDocumentById, currentDocument } = useDocumentStore();
+  const [examResults, setExamResults] = useState(null);
   const resultsRef = useRef(null);
 
+  const { data: document } = useDocument(examResults?.documentId);
+
   const { toPDF, targetRef } = usePDF({
-    filename: `Exam_Results_${currentDocument?.title || "Document"}.pdf`,
+    filename: `Exam_Results_${document?.title || "Document"}.pdf`,
   });
 
   useEffect(() => {
-    if (!results || !questions || questions.length === 0) {
+    const storedResults = localStorage.getItem("examResults");
+    if (storedResults) {
+      try {
+        const parsedResults = JSON.parse(storedResults);
+        setExamResults(parsedResults);
+      } catch (error) {
+        console.error("Error parsing exam results:", error);
+        toast.error("Error loading exam results");
+        navigate("/documents");
+      }
+    } else {
       toast.error("No exam results found");
       navigate("/documents");
-      return;
     }
-
-    if (documentId) {
-      getDocumentById(documentId);
-    }
-  }, [results, questions, documentId, navigate, getDocumentById]);
+  }, [navigate]);
 
   useEffect(() => {
     if (resultsRef.current) {
       fadeIn(resultsRef.current, 0.2);
     }
-  }, [results]);
+  }, [examResults]);
 
   const handleExportPdf = () => {
     try {
@@ -109,11 +107,27 @@ const ExamResults = () => {
   };
 
   const handleTakeNewExam = () => {
-    clearExamResults();
-    navigate(`/exam/generate/${documentId}`);
+    localStorage.removeItem("examResults");
+    navigate(`/generate/${examResults.documentId}`);
   };
 
-  if (!results || !questions || questions.length === 0) {
+  const getScorePercentage = () => {
+    if (!examResults?.validationResults) return 0;
+    const correctAnswers = examResults.validationResults.filter(
+      (result) => result.result === "Correct"
+    ).length;
+    return Math.round(
+      (correctAnswers / examResults.validationResults.length) * 100
+    );
+  };
+
+  const getScoreColor = (percentage) => {
+    if (percentage >= 80) return "text-green-600 dark:text-green-400";
+    if (percentage >= 60) return "text-yellow-600 dark:text-yellow-400";
+    return "text-red-600 dark:text-red-400";
+  };
+
+  if (!examResults) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
@@ -121,187 +135,215 @@ const ExamResults = () => {
     );
   }
 
+  const { questions, answers, validationResults, timeSpent, documentId } =
+    examResults;
+  const scorePercentage = getScorePercentage();
+
   return (
-    <div className="container mx-auto px-4 py-8" ref={targetRef}>
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/documents/${documentId}`)}
-              icon={ArrowLeft}
-              className="mr-4"
-            >
-              {/* Back to Document */}
-            </Button>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Exam Results
-            </h1>
-          </div>
-          {/* <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportPdf}
-            icon={FileDown}
-          >
-            Export PDF
-          </Button> */}
-        </div>
-
-        <div ref={resultsRef}>
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Exam Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Total Questions
-                  </p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">
-                    {questions.length}
-                  </p>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Correct Answers
-                  </p>
-                  <p className="text-xl font-bold text-green-600 dark:text-green-400">
-                    {results.filter((r) => r.result === "Correct").length}
-                  </p>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Score
-                  </p>
-                  <p className="text-xl font-bold text-orange-600 dark:text-orange-400">
-                    {Math.round(
-                      (results.filter((r) => r.result === "Correct").length /
-                        questions.length) *
-                        100
-                    )}
-                    %
-                  </p>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Time Spent
-                  </p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">
-                    {formatTime(timeSpent)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-6 mb-6">
-            {results.map((result, index) => {
-              const question = questions.find(
-                (q) => q._id === result.questionId
-              );
-
-              return (
-                <Card key={result.questionId}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center">
-                        {result.result === "Correct" ? (
-                          <>
-                            <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                            <span>Question {index + 1}</span>
-                          </>
-                        ) : (
-                          <>
-                            <XCircle className="h-5 w-5 text-red-500 mr-2" />
-                            <span>Question {index + 1}</span>
-                          </>
-                        )}
-                      </CardTitle>
-                      <Badge
-                        variant={
-                          result.result === "Correct" ? "success" : "danger"
-                        }
-                      >
-                        {result.result}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-2">
-                        Question:
-                      </h3>
-                      <p className="text-gray-700 dark:text-gray-300">
-                        {question.question}
-                      </p>
-                    </div>
-
-                    <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-2">
-                        Your Answer:
-                      </h3>
-                      <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        {answers[question._id]}
-                      </p>
-                    </div>
-
-                    <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-2">
-                        Correct Answer:
-                      </h3>
-                      <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        {result.explanation}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-
-          <div className="flex justify-between md:flex-row flex-col items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => navigate(`/documents/${documentId}`)}
-              className="w-full md:w-auto"
-            >
-              Back to Document
-            </Button>
-            <div className="flex space-y-2 md:space-x-2 md:flex-row flex-col w-full md:w-auto">
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/documents")}
+                icon={ArrowLeft}
+                className="mr-4"
+              >
+                Back to Documents
+              </Button>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Exam Results
+              </h1>
+            </div>
+            <div className="flex space-x-2">
               <Button
                 variant="outline"
                 onClick={handleExportPdf}
                 icon={FileDown}
-                className="w-full md:w-auto"
+                size="sm"
               >
                 Export PDF
               </Button>
-              <Button onClick={handleTakeNewExam} className="w-full md:w-auto">
+              <Button onClick={handleTakeNewExam} size="sm">
                 Take New Exam
               </Button>
             </div>
           </div>
+
+          <div ref={targetRef}>
+            <div ref={resultsRef} className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Overall Score</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Score
+                      </p>
+                      <p
+                        className={`text-3xl font-bold ${getScoreColor(
+                          scorePercentage
+                        )}`}
+                      >
+                        {scorePercentage}%
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Questions
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {
+                          validationResults.filter(
+                            (r) => r.result === "Correct"
+                          ).length
+                        }{" "}
+                        / {questions.length}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Time Spent
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {formatTime(timeSpent)}
+                      </p>
+                    </div>
+                  </div>
+                  {document && (
+                    <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Document:{" "}
+                        <span className="font-medium">{document.title}</span>
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <div className="space-y-4">
+                {questions.map((question, index) => {
+                  const result = validationResults.find(
+                    (r) => r.questionId === question._id
+                  );
+                  const userAnswer = answers[question._id];
+                  const isCorrect = result?.result === "Correct";
+
+                  return (
+                    <Card key={question._id}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="flex items-center">
+                            <span className="mr-3">Question {index + 1}</span>
+                            {isCorrect ? (
+                              <CheckCircle className="h-5 w-5 text-green-600" />
+                            ) : (
+                              <XCircle className="h-5 w-5 text-red-600" />
+                            )}
+                          </CardTitle>
+                          <div className="flex items-center space-x-2">
+                            <Badge
+                              variant={
+                                question.difficulty === "easy"
+                                  ? "success"
+                                  : question.difficulty === "medium"
+                                  ? "warning"
+                                  : "danger"
+                              }
+                            >
+                              {question.difficulty}
+                            </Badge>
+                            <Badge variant={isCorrect ? "success" : "danger"}>
+                              {isCorrect ? "Correct" : "Incorrect"}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                            Question:
+                          </h4>
+                          <p className="text-gray-700 dark:text-gray-300">
+                            {question.question}
+                          </p>
+                        </div>
+
+                        <div>
+                          <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                            Your Answer:
+                          </h4>
+                          <div
+                            className={`p-3 rounded-lg border ${
+                              isCorrect
+                                ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                                : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+                            }`}
+                          >
+                            <p className="text-gray-700 dark:text-gray-300">
+                              {userAnswer}
+                            </p>
+                          </div>
+                        </div>
+
+                        {result?.correctAnswer && (
+                          <div>
+                            <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                              Correct Answer:
+                            </h4>
+                            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                              <p className="text-gray-700 dark:text-gray-300">
+                                {result.correctAnswer}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {result?.explanation && (
+                          <div>
+                            <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                              {isCorrect
+                                ? "Explanation:"
+                                : "Why this is incorrect:"}
+                            </h4>
+                            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                              <p className="text-gray-700 dark:text-gray-300">
+                                {result.explanation}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {question.tags && question.tags.length > 0 && (
+                          <div>
+                            <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                              Tags:
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                              {question.tags.map((tag) => (
+                                <Badge key={tag} variant="secondary">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-const ExamResultsWithErrorBoundary = () => {
-  const navigate = useNavigate();
-
-  const handleReset = () => {
-    navigate(0);
-  };
-
-  return (
-    <ErrorBoundary FallbackComponent={ErrorFallback} onReset={handleReset}>
-      <ExamResults />
     </ErrorBoundary>
   );
 };
 
-export default ExamResultsWithErrorBoundary;
+export default ExamResults;

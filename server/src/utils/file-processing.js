@@ -86,9 +86,7 @@ export const extractTextFromImage = async (buffer, mimetype) => {
       });
     } else {
       if (!workerCache) {
-        workerCache = await createWorker({
-          logger: (m) => console.log(m),
-        });
+        workerCache = await createWorker();
       }
       worker = workerCache;
     }

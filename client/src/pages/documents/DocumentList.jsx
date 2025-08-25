@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Plus,
@@ -10,7 +10,6 @@ import {
   Upload,
   Database,
 } from "lucide-react";
-import { toast } from "react-hot-toast";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import {
@@ -21,33 +20,23 @@ import {
 } from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
 import Modal from "../../components/ui/Modal";
-import useDocumentStore from "../../stores/documentStore";
+import Spinner from "../../components/ui/Spinner";
+import {
+  useDocuments,
+  useDeleteDocument,
+  useVectorizeDocument,
+} from "../../hooks/useDocuments";
 import { formatFileSize, formatDate, getFileIcon } from "../../utils/fileUtils";
-import { staggerItems } from "../../utils/animations";
 
 const DocumentList = () => {
-  const {
-    documents,
-    fetchDocuments,
-    deleteDocument,
-    vectorizeDocument,
-    isLoading,
-  } = useDocumentStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState(null);
   const documentsRef = useRef(null);
 
-  useEffect(() => {
-    fetchDocuments();
-  }, [fetchDocuments]);
-
-  useEffect(() => {
-    if (documents.length > 0 && documentsRef.current) {
-      const items = documentsRef.current.querySelectorAll(".document-item");
-      staggerItems(items, 0.2, 0.05);
-    }
-  }, [documents]);
+  const { data: documents = [], isLoading, error } = useDocuments();
+  const deleteMutation = useDeleteDocument();
+  const vectorizeMutation = useVectorizeDocument();
 
   const filteredDocuments = documents.filter(
     (doc) =>
@@ -63,28 +52,16 @@ const DocumentList = () => {
   const handleDelete = async () => {
     if (!documentToDelete) return;
 
-    const { isLoading: isPending, error } = await deleteDocument(
-      documentToDelete._id
-    );
-
-    if (!isPending && !error) {
-      toast.success("Document deleted successfully");
-    } else if (error) {
-      toast.error(error || "Failed to delete document");
-    }
-
-    setShowDeleteModal(false);
-    setDocumentToDelete(null);
+    deleteMutation.mutate(documentToDelete._id, {
+      onSuccess: () => {
+        setShowDeleteModal(false);
+        setDocumentToDelete(null);
+      },
+    });
   };
 
   const handleVectorize = async (id) => {
-    const { isLoading: isPending, error } = await vectorizeDocument(id);
-
-    if (!isPending && !error) {
-      toast.success("Document vectorized successfully");
-    } else if (error) {
-      toast.error(error || "Failed to vectorize document");
-    }
+    vectorizeMutation.mutate(id);
   };
 
   const renderDocumentIcon = (fileType) => {
@@ -136,7 +113,19 @@ const DocumentList = () => {
 
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+          <Spinner size="lg" />
+        </div>
+      ) : error ? (
+        <div className="text-center py-12">
+          <div className="mx-auto h-16 w-16 rounded-full bg-red-100 flex items-center justify-center dark:bg-red-900">
+            <FileText className="h-8 w-8 text-red-500 dark:text-red-400" />
+          </div>
+          <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
+            Error loading documents
+          </h3>
+          <p className="mt-2 text-gray-500 dark:text-gray-400">
+            {error.message || "Something went wrong"}
+          </p>
         </div>
       ) : filteredDocuments.length === 0 ? (
         <div className="text-center py-12">
@@ -219,10 +208,13 @@ const DocumentList = () => {
                   ) : (
                     <button
                       onClick={() => handleVectorize(document._id)}
-                      className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                      disabled={vectorizeMutation.isPending}
+                      className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors disabled:opacity-50"
                     >
                       <Database className="h-3 w-3 mr-1" />
-                      Vectorize
+                      {vectorizeMutation.isPending
+                        ? "Vectorizing..."
+                        : "Vectorize"}
                     </button>
                   )}
                 </div>
@@ -283,7 +275,7 @@ const DocumentList = () => {
             <Button
               variant="danger"
               onClick={handleDelete}
-              isLoading={isLoading}
+              isLoading={deleteMutation.isPending}
             >
               Delete
             </Button>

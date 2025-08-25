@@ -12,40 +12,27 @@ import {
   CardContent,
   CardFooter,
 } from "../../components/ui/Card";
-import useDocumentStore from "../../stores/documentStore";
+import { useDocument, useUpdateDocument } from "../../hooks/useDocuments";
 import { fadeIn } from "../../utils/animations";
 
 const DocumentEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const {
-    getDocumentById,
-    updateDocument,
-    isLoading,
-    currentDocument,
-    clearCurrentDocument,
-  } = useDocumentStore();
+  const { data: document, isLoading, error } = useDocument(id);
+  const updateDocumentMutation = useUpdateDocument();
   const [title, setTitle] = useState("");
   const [errors, setErrors] = useState({});
   const formRef = useRef(null);
 
   useEffect(() => {
-    getDocumentById(id);
-
-    return () => {
-      clearCurrentDocument();
-    };
-  }, [id, getDocumentById, clearCurrentDocument]);
-
-  useEffect(() => {
-    if (currentDocument) {
-      setTitle(currentDocument.title || "");
+    if (document) {
+      setTitle(document.title || "");
     }
 
     if (formRef.current) {
       fadeIn(formRef.current, 0.2);
     }
-  }, [currentDocument]);
+  }, [document]);
 
   const validate = () => {
     const newErrors = {};
@@ -58,25 +45,48 @@ const DocumentEdit = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!validate()) return;
 
-    const { isLoading: isPending, error } = await updateDocument(id, { title });
-
-    if (!isPending && !error) {
-      toast.success("Document updated successfully");
-      navigate(`/documents/${id}`);
-    } else if (error) {
-      toast.error(error || "Failed to update document");
-    }
+    updateDocumentMutation.mutate(
+      { id, data: { title } },
+      {
+        onSuccess: () => {
+          toast.success("Document updated successfully");
+          navigate(`/documents/${id}`);
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to update document");
+        },
+      }
+    );
   };
 
-  if (isLoading && !currentDocument) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+
+  if (error || !document) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Document Not Found
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            The document you're trying to edit doesn't exist or has been
+            deleted.
+          </p>
+          <Button onClick={() => navigate("/documents")}>
+            Back to Documents
+          </Button>
+        </div>
       </div>
     );
   }
@@ -91,9 +101,7 @@ const DocumentEdit = () => {
             onClick={() => navigate(`/documents/${id}`)}
             icon={ArrowLeft}
             className="mr-4"
-          >
-            {/* Back to Document */}
-          </Button>
+          ></Button>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Edit Document
           </h1>
@@ -117,31 +125,29 @@ const DocumentEdit = () => {
                 />
               </div>
 
-              {currentDocument && (
-                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <h3 className="font-medium text-gray-900 dark:text-white mb-2">
-                    Document Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500 dark:text-gray-400">
-                        Original Filename:
-                      </span>
-                      <p className="text-gray-900 dark:text-white">
-                        {currentDocument.originalFileName}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500 dark:text-gray-400">
-                        File Type:
-                      </span>
-                      <p className="text-gray-900 dark:text-white truncate">
-                        {currentDocument.fileType}
-                      </p>
-                    </div>
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <h3 className="font-medium text-gray-900 dark:text-white mb-2">
+                  Document Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Original Filename:
+                    </span>
+                    <p className="text-gray-900 dark:text-white">
+                      {document.originalFileName}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 dark:text-gray-400">
+                      File Type:
+                    </span>
+                    <p className="text-gray-900 dark:text-white truncate">
+                      {document.fileType}
+                    </p>
                   </div>
                 </div>
-              )}
+              </div>
             </form>
           </CardContent>
           <CardFooter className="flex justify-between">
@@ -154,7 +160,7 @@ const DocumentEdit = () => {
             <Button
               type="submit"
               onClick={handleSubmit}
-              isLoading={isLoading}
+              isLoading={updateDocumentMutation.isPending}
               icon={Save}
             >
               Save Changes

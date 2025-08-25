@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Upload,
@@ -8,7 +8,6 @@ import {
   File,
   AlertCircle,
 } from "lucide-react";
-import { toast } from "react-hot-toast";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Label from "../../components/ui/Label";
@@ -21,29 +20,23 @@ import {
   CardFooter,
 } from "../../components/ui/Card";
 import { Alert, AlertTitle, AlertDescription } from "../../components/ui/Alert";
-import useDocumentStore from "../../stores/documentStore";
+import { useUploadDocuments } from "../../hooks/useDocuments";
 import {
   validateFileType,
   validateFileSize,
   formatFileSize,
 } from "../../utils/fileUtils";
-import { fadeIn } from "../../utils/animations";
 
 const DocumentUpload = () => {
   const [files, setFiles] = useState([]);
   const [title, setTitle] = useState("");
   const [errors, setErrors] = useState({});
   const [isDragging, setIsDragging] = useState(false);
-  const { uploadDocument, isLoading } = useDocumentStore();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const dropZoneRef = useRef(null);
 
-  useEffect(() => {
-    if (dropZoneRef.current) {
-      fadeIn(dropZoneRef.current, 0.2);
-    }
-  }, []);
+  const uploadMutation = useUploadDocuments();
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -65,7 +58,9 @@ const DocumentUpload = () => {
     });
 
     if (errorMessages.length > 0) {
-      toast.error(errorMessages.join("\n"));
+      setErrors({ files: errorMessages.join("\n") });
+    } else {
+      setErrors({});
     }
 
     if (validFiles.length > 0) {
@@ -140,14 +135,11 @@ const DocumentUpload = () => {
       formData.append("title", title);
     }
 
-    const { data } = await uploadDocument(formData);
-
-    if (!data) {
-      toast.success("Document uploaded successfully");
-      navigate("/documents");
-    } else {
-      toast.error("Failed to upload document");
-    }
+    uploadMutation.mutate(formData, {
+      onSuccess: () => {
+        navigate("/documents");
+      },
+    });
   };
 
   return (
@@ -271,7 +263,7 @@ const DocumentUpload = () => {
             <Button
               type="submit"
               onClick={handleSubmit}
-              isLoading={isLoading}
+              isLoading={uploadMutation.isPending}
               icon={Upload}
             >
               Upload {files.length > 0 ? `(${files.length})` : ""}

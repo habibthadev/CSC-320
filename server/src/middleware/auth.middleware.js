@@ -3,25 +3,47 @@ import { asyncHandler } from "./error.middleware.js";
 import { AppError } from "./error.middleware.js";
 import User from "../models/user.model.js";
 import { JWT_SECRET } from "../config/env.js";
+import logger from "../utils/logger.js";
 
 const TOKEN_CACHE = new Map();
 
 export const protect = asyncHandler(async (req, res, next) => {
   let token;
 
-  // Check for token in Authorization header
+  logger.debug(
+    {
+      method: req.method,
+      url: req.url,
+      headers: {
+        authorization: req.headers.authorization ? "Bearer [REDACTED]" : "None",
+        contentType: req.headers["content-type"],
+      },
+      cookies: req.cookies ? Object.keys(req.cookies) : "None",
+    },
+    "Authentication middleware called"
+  );
+
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
     token = req.headers.authorization.split(" ")[1];
-  }
-  // Check for token in cookies (for OAuth users)
-  else if (req.cookies && req.cookies.accessToken) {
+    logger.debug("Token found in Authorization header");
+  } else if (req.cookies && req.cookies.accessToken) {
     token = req.cookies.accessToken;
+    logger.debug("Token found in cookies");
   }
 
   if (!token) {
+    logger.warn(
+      {
+        method: req.method,
+        url: req.url,
+        authHeader: req.headers.authorization,
+        cookies: req.cookies ? Object.keys(req.cookies) : "None",
+      },
+      "No token provided"
+    );
     throw new AppError("Not authorized, no token provided", 401);
   }
 
@@ -30,28 +52,57 @@ export const protect = asyncHandler(async (req, res, next) => {
       const cached = TOKEN_CACHE.get(token);
       if (cached.expires > Date.now()) {
         req.user = cached.user;
+        logger.debug(
+          { userId: cached.user._id },
+          "User authenticated from cache"
+        );
         return next();
       } else {
         TOKEN_CACHE.delete(token);
+        logger.debug("Cached token expired");
       }
     }
 
+    logger.debug("Verifying JWT token");
     const decoded = jwt.verify(token, JWT_SECRET);
 
+    logger.debug(
+      {
+        decodedPayload: {
+          id: decoded.id,
+          tokenVersion: decoded.tokenVersion,
+          iat: decoded.iat,
+          exp: decoded.exp,
+        },
+      },
+      "JWT decoded successfully"
+    );
+
     if (!decoded.id) {
+      logger.warn("Invalid token payload - no user ID");
       throw new AppError("Invalid token payload", 401);
     }
 
     const user = await User.findById(decoded.id).select("-password").lean();
 
     if (!user) {
+      logger.warn({ userId: decoded.id }, "User not found for token");
       throw new AppError("User not found", 401);
     }
 
     if (
       user.tokenVersion !== undefined &&
+      decoded.tokenVersion !== undefined &&
       decoded.tokenVersion !== user.tokenVersion
     ) {
+      logger.warn(
+        {
+          userId: user._id,
+          tokenVersion: decoded.tokenVersion,
+          userTokenVersion: user.tokenVersion,
+        },
+        "Token version mismatch"
+      );
       throw new AppError("Token has been invalidated", 401);
     }
 
@@ -66,8 +117,16 @@ export const protect = asyncHandler(async (req, res, next) => {
     }
 
     req.user = user;
+    logger.debug(
+      { userId: user._id, email: user.email },
+      "User authenticated successfully"
+    );
     next();
   } catch (error) {
+    logger.error(
+      { error: error.message, tokenExists: !!token },
+      "Authentication failed"
+    );
     if (error.name === "TokenExpiredError") {
       throw new AppError("Token has expired", 401);
     } else if (error.name === "JsonWebTokenError") {

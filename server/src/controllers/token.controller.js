@@ -2,17 +2,21 @@ import { verifyRefreshToken, generateTokens } from "../utils/token-utils.js";
 import { asyncHandler, AppError } from "../middleware/error.middleware.js";
 import User from "../models/user.model.js";
 import { NODE_ENV } from "../config/env.js";
+import logger from "../utils/logger.js";
 
 export const refreshToken = asyncHandler(async (req, res) => {
   let refreshToken;
 
   if (req.cookies && req.cookies.refreshToken) {
     refreshToken = req.cookies.refreshToken;
+    logger.debug("Refresh token found in cookies");
   } else if (req.body.refreshToken) {
     refreshToken = req.body.refreshToken;
+    logger.debug("Refresh token found in request body");
   }
 
   if (!refreshToken) {
+    logger.warn("No refresh token provided");
     throw new AppError("Refresh token not provided", 401);
   }
 
@@ -20,16 +24,20 @@ export const refreshToken = asyncHandler(async (req, res) => {
     const decoded = verifyRefreshToken(refreshToken);
 
     if (!decoded || !decoded.id) {
+      logger.warn("Invalid refresh token payload");
       throw new AppError("Invalid refresh token", 401);
     }
 
     const user = await User.findById(decoded.id);
 
     if (!user) {
+      logger.warn({ userId: decoded.id }, "User not found for refresh token");
       throw new AppError("User not found", 401);
     }
 
-    const tokens = generateTokens(user._id);
+    const tokens = generateTokens(user._id, user.tokenVersion || 0);
+
+    logger.info({ userId: user._id }, "Token refreshed successfully");
 
     if (req.cookies && req.cookies.refreshToken) {
       res.cookie("accessToken", tokens.accessToken, {
@@ -50,7 +58,7 @@ export const refreshToken = asyncHandler(async (req, res) => {
     res.json({
       success: true,
       data: {
-        accessToken: tokens.accessToken,
+        token: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         user: {
           id: user._id,

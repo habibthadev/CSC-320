@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Mail, ArrowLeft, KeyRound } from "lucide-react";
-import { toast } from "react-hot-toast";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Label from "../../components/ui/Label";
@@ -13,8 +12,12 @@ import {
   CardContent,
   CardFooter,
 } from "../../components/ui/Card";
-import useAuthStore from "../../stores/authStore";
-import { fadeIn } from "../../utils/animations";
+import {
+  useForgotPassword,
+  useVerifyOTP,
+  useResetPassword,
+  useAuth,
+} from "../../hooks/useAuth";
 
 const ForgotPassword = () => {
   const [step, setStep] = useState(1);
@@ -23,15 +26,20 @@ const ForgotPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState({});
-  const { forgotPassword, verifyOTP, resetPassword, isLoading } =
-    useAuthStore();
   const formRef = useRef(null);
+  const navigate = useNavigate();
+
+  const { isAuthenticated } = useAuth();
+  const forgotPasswordMutation = useForgotPassword();
+
 
   useEffect(() => {
-    if (formRef.current) {
-      fadeIn(formRef.current, 0.2);
+    if (isAuthenticated) {
+      navigate("/documents", { replace: true });
     }
-  }, [step]);
+  }, [isAuthenticated, navigate]);
+  const verifyOTPMutation = useVerifyOTP();
+  const resetPasswordMutation = useResetPassword();
 
   const validateEmail = () => {
     const newErrors = {};
@@ -81,14 +89,11 @@ const ForgotPassword = () => {
 
     if (!validateEmail()) return;
 
-    const { success, error, data } = await forgotPassword(email);
-
-    if (success) {
-      toast.success("OTP sent to your email");
-      setStep(2);
-    } else if (error) {
-      toast.error(error || "Failed to send OTP. Please try again.");
-    }
+    forgotPasswordMutation.mutate(email, {
+      onSuccess: () => {
+        setStep(2);
+      },
+    });
   };
 
   const handleVerifyOTP = async (e) => {
@@ -96,14 +101,14 @@ const ForgotPassword = () => {
 
     if (!validateOTP()) return;
 
-    const { success, error } = await verifyOTP(email, otp);
-
-    if (success) {
-      toast.success("OTP verified successfully");
-      setStep(3);
-    } else if (error) {
-      toast.error(error || "Invalid or expired OTP. Please try again.");
-    }
+    verifyOTPMutation.mutate(
+      { email, otp },
+      {
+        onSuccess: () => {
+          setStep(3);
+        },
+      }
+    );
   };
 
   const handleResetPassword = async (e) => {
@@ -111,14 +116,14 @@ const ForgotPassword = () => {
 
     if (!validatePassword()) return;
 
-    const { success, error } = await resetPassword(email, otp, password);
-
-    if (success) {
-      toast.success("Password reset successful!");
-      setStep(4);
-    } else if (error) {
-      toast.error(error || "Failed to reset password. Please try again.");
-    }
+    resetPasswordMutation.mutate(
+      { email, otp, password },
+      {
+        onSuccess: () => {
+          setStep(4);
+        },
+      }
+    );
   };
 
   const renderStep = () => {
@@ -143,7 +148,11 @@ const ForgotPassword = () => {
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full" isLoading={isLoading}>
+            <Button
+              type="submit"
+              className="w-full"
+              isLoading={forgotPasswordMutation.isPending}
+            >
               Send OTP
             </Button>
           </form>
@@ -166,7 +175,11 @@ const ForgotPassword = () => {
                 Please enter the 6-digit OTP sent to your email
               </p>
             </div>
-            <Button type="submit" className="w-full" isLoading={isLoading}>
+            <Button
+              type="submit"
+              className="w-full"
+              isLoading={verifyOTPMutation.isPending}
+            >
               Verify OTP
             </Button>
             <Button
@@ -220,7 +233,11 @@ const ForgotPassword = () => {
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full" isLoading={isLoading}>
+            <Button
+              type="submit"
+              className="w-full"
+              isLoading={resetPasswordMutation.isPending}
+            >
               Reset Password
             </Button>
           </form>
@@ -277,7 +294,7 @@ const ForgotPassword = () => {
             <CardTitle className="text-2xl font-bold text-center flex-grow">
               {step === 4 ? "Success" : "Reset Password"}
             </CardTitle>
-            <div className="w-5"></div> 
+            <div className="w-5"></div>
           </div>
           {step < 4 && (
             <CardDescription className="text-center">

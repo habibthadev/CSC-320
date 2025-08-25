@@ -18,6 +18,7 @@ import questionRoutes from "./routes/question.routes.js";
 import ragRoutes from "./routes/rag.routes.js";
 import oauthRoutes from "./routes/oauth.routes.js";
 import { connectToDatabase } from "./config/db.js";
+import logger from "./utils/logger.js";
 
 const app = express();
 
@@ -51,6 +52,23 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use((req, res, next) => {
+  logger.info(
+    {
+      method: req.method,
+      url: req.url,
+      userAgent: req.get("user-agent"),
+      ip: req.ip,
+      headers: {
+        authorization: req.headers.authorization ? "Bearer [REDACTED]" : "None",
+        contentType: req.headers["content-type"],
+      },
+    },
+    "Incoming request"
+  );
+  next();
+});
 
 app.use(async (req, res, next) => {
   try {

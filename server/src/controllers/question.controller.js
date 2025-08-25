@@ -121,6 +121,7 @@ export const validateUserAnswer = asyncHandler(async (req, res) => {
         questionId: question._id,
         result: validation.result,
         explanation: validation.explanation,
+        correctAnswer: question.correctAnswer,
         userAnswer: userAnswer.trim(),
       },
     });

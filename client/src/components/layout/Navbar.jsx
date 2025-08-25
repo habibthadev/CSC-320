@@ -9,34 +9,29 @@ import {
   User,
   FileText,
   HelpCircle,
-  Book,
 } from "lucide-react";
 import Button from "../ui/Button";
-import useAuthStore from "../../stores/authStore";
-import useThemeStore from "../../stores/themeStore";
-import { slideInRight } from "../../utils/animations";
+import { useAuth, useLogout } from "../../hooks/useAuth";
 
-const Navbar = () => {
+const Navbar = ({ theme, toggleTheme }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isAuthenticated, user, logout } = useAuthStore();
-  const { theme, toggleTheme } = useThemeStore();
+
+  const { isAuthenticated, user } = useAuth();
+  const logoutMutation = useLogout();
   const location = useLocation();
   const navigate = useNavigate();
   const navRef = React.useRef(null);
-
-  useEffect(() => {
-    if (navRef.current) {
-      slideInRight(navRef.current, 0.2);
-    }
-  }, []);
 
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location]);
 
   const handleLogout = () => {
-    logout();
-    navigate("/login");
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        navigate("/login");
+      },
+    });
   };
 
   const navLinks = [

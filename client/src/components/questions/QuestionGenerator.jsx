@@ -26,16 +26,17 @@ import {
   CardFooter,
 } from "../ui/Card";
 import Badge from "../ui/Badge";
-import useDocumentStore from "../../stores/documentStore";
-import useQuestionStore from "../../stores/questionStore";
+import { useDocument } from "../../hooks/useDocuments";
+import { useGenerateQuestions } from "../../hooks/useQuestions";
 import { fadeIn } from "../../utils/animations";
 import QuestionGeneratorPdf from "../pdf/QuestionGeneratorPdf";
 
 const QuestionGenerator = () => {
   const { documentId } = useParams();
   const navigate = useNavigate();
-  const { getDocumentById, currentDocument } = useDocumentStore();
-  const { generateQuestions, isLoading } = useQuestionStore();
+  const { data: document, isLoading: documentLoading } =
+    useDocument(documentId);
+  const generateQuestionsMutation = useGenerateQuestions();
   const [formData, setFormData] = useState({
     numQuestions: 5,
     difficulty: "medium",

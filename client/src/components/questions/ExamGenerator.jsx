@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast";
 import { ArrowLeft, Sparkles, Tag, Plus, X } from "lucide-react";
 
 import Button from "../ui/Button";
@@ -16,17 +15,13 @@ import {
   CardFooter,
 } from "../ui/Card";
 import Badge from "../ui/Badge";
-import useDocumentStore from "../../stores/documentStore";
-import useQuestionStore from "../../stores/questionStore";
-import useExamStore from "../../stores/examStore";
-import { fadeIn } from "../../utils/animations";
+import Spinner from "../ui/Spinner";
+import { useDocument } from "../../hooks/useDocuments";
+import { useGenerateQuestions } from "../../hooks/useQuestions";
 
 const ExamGenerator = () => {
   const { documentId } = useParams();
   const navigate = useNavigate();
-  const { getDocumentById, currentDocument } = useDocumentStore();
-  const { generateQuestions, isLoading } = useQuestionStore();
-  const { clearExamResults } = useExamStore();
   const [formData, setFormData] = useState({
     numQuestions: 5,
     difficulty: "medium",
@@ -36,17 +31,9 @@ const ExamGenerator = () => {
   const [errors, setErrors] = useState({});
   const formRef = useRef(null);
 
-  useEffect(() => {
-    getDocumentById(documentId);
-
-    clearExamResults();
-  }, [documentId, getDocumentById, clearExamResults]);
-
-  useEffect(() => {
-    if (formRef.current) {
-      fadeIn(formRef.current, 0.2);
-    }
-  }, []);
+  const { data: currentDocument, isLoading: documentLoading } =
+    useDocument(documentId);
+  const generateQuestionsMutation = useGenerateQuestions();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,6 +41,12 @@ const ExamGenerator = () => {
       ...prev,
       [name]: name === "numQuestions" ? Number.parseInt(value, 10) : value,
     }));
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
   };
 
   const handleAddTag = () => {
@@ -100,19 +93,23 @@ const ExamGenerator = () => {
 
     if (!validate()) return;
 
-    const { success, error, data } = await generateQuestions(
-      documentId,
-      formData
+    generateQuestionsMutation.mutate(
+      { documentId, options: formData },
+      {
+        onSuccess: (data) => {
+          navigate(`/exam/${documentId}`, { state: { questions: data.data } });
+        },
+      }
     );
-
-    if (success) {
-      toast.success("Questions generated successfully");
-
-      navigate(`/exam/${documentId}`, { state: { questions: data } });
-    } else if (error) {
-      toast.error(error || "Failed to generate questions");
-    }
   };
+
+  if (documentLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -242,7 +239,7 @@ const ExamGenerator = () => {
             <Button
               type="submit"
               onClick={handleSubmit}
-              isLoading={isLoading}
+              isLoading={generateQuestionsMutation.isPending}
               icon={Sparkles}
             >
               Generate Exam

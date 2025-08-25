@@ -6,10 +6,12 @@ import {
   verifyToken,
   invalidateUserTokens,
 } from "../middleware/auth.middleware.js";
+import { generateTokens, generateRefreshToken } from "../utils/token-utils.js";
 import {
   sendPasswordResetEmail,
   sendWelcomeEmail,
 } from "../utils/email-service.js";
+import logger from "../utils/logger.js";
 
 export const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -46,7 +48,15 @@ export const registerUser = asyncHandler(async (req, res) => {
       console.error("Failed to send welcome email:", error);
     }
 
-    const token = generateToken(user._id, user.tokenVersion || 0);
+    const { accessToken, refreshToken } = generateTokens(
+      user._id,
+      user.tokenVersion || 0
+    );
+
+    logger.info(
+      { userId: user._id, email: user.email },
+      "User registered successfully"
+    );
 
     res.status(201).json({
       success: true,
@@ -55,7 +65,8 @@ export const registerUser = asyncHandler(async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        token,
+        token: accessToken,
+        refreshToken: refreshToken,
         createdAt: user.createdAt,
       },
     });
@@ -82,7 +93,15 @@ export const loginUser = asyncHandler(async (req, res) => {
   user.lastLogin = new Date();
   await user.save();
 
-  const token = generateToken(user._id, user.tokenVersion || 0);
+  const { accessToken, refreshToken } = generateTokens(
+    user._id,
+    user.tokenVersion || 0
+  );
+
+  logger.info(
+    { userId: user._id, email: user.email },
+    "User logged in successfully"
+  );
 
   res.json({
     success: true,
@@ -91,7 +110,8 @@ export const loginUser = asyncHandler(async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      token,
+      token: accessToken,
+      refreshToken: refreshToken,
       lastLogin: user.lastLogin,
     },
   });

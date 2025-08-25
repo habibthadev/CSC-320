@@ -4,11 +4,11 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { useEffect } from "react";
 import Layout from "./components/layout/Layout";
 import ExamGenerator from "./components/questions/ExamGenerator";
 
-import useAuthStore from "./stores/authStore";
+import { useAuth } from "./hooks/useAuth";
+import { useAuthInit } from "./hooks/useAuthInit";
 
 import HomePage from "./pages/home/HomePage";
 import Login from "./pages/auth/Login";
@@ -29,7 +29,7 @@ import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import NotFound from "./pages/errors/NotFound";
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -39,103 +39,201 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
-  const { getProfile, isAuthenticated } = useAuthStore();
+  const { isLoading: authLoading } = useAuthInit();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      getProfile();
-    }
-  }, [isAuthenticated, getProfile]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Layout />}>
-          {}
-          <Route index element={<HomePage />} />
-          <Route path="login" element={<Login />} />
-          <Route path="register" element={<Register />} />
-          <Route path="forgot-password" element={<ForgotPassword />} />
-          <Route path="reset-password/:token" element={<ResetPassword />} />
-          <Route path="help" element={<HelpCenter />} />
-          <Route path="terms" element={<TermsOfService />} />
-          <Route path="privacy" element={<PrivacyPolicy />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
-          {}
-          <Route
-            path="documents"
-            element={
-              <ProtectedRoute>
+        <Route
+          path="/"
+          element={
+            <Layout>
+              <HomePage />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="/documents"
+          element={
+            <ProtectedRoute>
+              <Layout>
                 <DocumentList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="documents/upload"
-            element={
-              <ProtectedRoute>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/documents/upload"
+          element={
+            <ProtectedRoute>
+              <Layout>
                 <DocumentUpload />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="documents/:id"
-            element={
-              <ProtectedRoute>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/documents/:id"
+          element={
+            <ProtectedRoute>
+              <Layout>
                 <DocumentDetail />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="documents/edit/:id"
-            element={
-              <ProtectedRoute>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/documents/:id/edit"
+          element={
+            <ProtectedRoute>
+              <Layout>
                 <DocumentEdit />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="chat/:id"
-            element={
-              <ProtectedRoute>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <Layout>
                 <ChatView />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="exam/generate/:documentId"
-            element={
-              <ProtectedRoute>
-                <ExamGenerator />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="exam/:documentId"
-            element={
-              <ProtectedRoute>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/chat/:id"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ChatView />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/exam"
+          element={
+            <ProtectedRoute>
+              <Layout>
                 <ExamView />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="exam/results"
-            element={
-              <ProtectedRoute>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/exam/:documentId"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ExamView />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/exam/results"
+          element={
+            <ProtectedRoute>
+              <Layout>
                 <ExamResults />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="profile"
-            element={
-              <ProtectedRoute>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/generate"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ExamGenerator />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/generate/:documentId"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ExamGenerator />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Layout>
                 <ProfileView />
-              </ProtectedRoute>
-            }
-          />
-        </Route>
-        <Route path="*" element={<NotFound />} />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/help"
+          element={
+            <Layout>
+              <HelpCenter />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="/terms"
+          element={
+            <Layout>
+              <TermsOfService />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="/privacy"
+          element={
+            <Layout>
+              <PrivacyPolicy />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="*"
+          element={
+            <Layout>
+              <NotFound />
+            </Layout>
+          }
+        />
       </Routes>
     </Router>
   );

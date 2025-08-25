@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogIn, Mail, Lock } from "lucide-react";
-import { toast } from "react-hot-toast";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Label from "../../components/ui/Label";
@@ -13,7 +12,7 @@ import {
   CardContent,
   CardFooter,
 } from "../../components/ui/Card";
-import useAuthStore from "../../stores/authStore";
+import { useLogin, useAuth } from "../../hooks/useAuth";
 import { fadeIn } from "../../utils/animations";
 
 const Login = () => {
@@ -22,17 +21,15 @@ const Login = () => {
     password: "",
   });
   const [errors, setErrors] = useState({});
-  const { login, isLoading, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const formRef = useRef(null);
 
+  const { isAuthenticated } = useAuth();
+  const loginMutation = useLogin();
+
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/documents");
-    }
-
-    if (formRef.current) {
-      fadeIn(formRef.current, 0.2);
+      navigate("/documents", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -59,6 +56,12 @@ const Login = () => {
       ...prev,
       [name]: value,
     }));
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -66,14 +69,7 @@ const Login = () => {
 
     if (!validate()) return;
 
-    const { success, error } = await login(formData);
-
-    if (success) {
-      toast.success("Login successful!");
-      navigate("/documents");
-    } else if (error) {
-      toast.error(error || "Login failed. Please try again.");
-    }
+    loginMutation.mutate(formData);
   };
 
   return (
@@ -136,7 +132,7 @@ const Login = () => {
             <Button
               type="submit"
               className="w-full"
-              isLoading={isLoading}
+              isLoading={loginMutation.isPending}
               icon={LogIn}
             >
               Login

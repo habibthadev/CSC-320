@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { User, Mail, Lock, Save } from "lucide-react";
-import { toast } from "react-hot-toast";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Label from "../../components/ui/Label";
@@ -13,14 +12,17 @@ import {
   CardFooter,
 } from "../../components/ui/Card";
 import { Tabs, TabsTrigger, TabsContent } from "../../components/ui/Tabs";
-import useAuthStore from "../../stores/authStore";
-import { fadeIn } from "../../utils/animations";
+import Spinner from "../../components/ui/Spinner";
+import { useAuth, useProfile, useUpdateProfile } from "../../hooks/useAuth";
 
 const ProfileView = () => {
-  const { user, updateProfile, isLoading } = useAuthStore();
-  const [profileData, setProfileData] = useState({
-    name: "",
-    email: "",
+  const { user } = useAuth();
+  const { data: profileData, isLoading: profileLoading } = useProfile();
+  const updateProfileMutation = useUpdateProfile();
+
+  const [formData, setFormData] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -31,29 +33,24 @@ const ProfileView = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const formRef = useRef(null);
 
-  useEffect(() => {
-    if (user) {
-      setProfileData({
-        name: user.name || "",
-        email: user.email || "",
-      });
-    }
-
-    if (formRef.current) {
-      fadeIn(formRef.current, 0.2);
-    }
-  }, [user, activeTab]);
+  if (profileLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
 
   const validateProfile = () => {
     const newErrors = {};
 
-    if (!profileData.name.trim()) {
+    if (!formData.name.trim()) {
       newErrors.name = "Name is required";
     }
 
-    if (!profileData.email.trim()) {
+    if (!formData.email.trim()) {
       newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(profileData.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email is invalid";
     }
 
@@ -84,10 +81,16 @@ const ProfileView = () => {
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    setProfileData((prev) => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
   };
 
   const handlePasswordChange = (e) => {
@@ -96,6 +99,12 @@ const ProfileView = () => {
       ...prev,
       [name]: value,
     }));
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
   };
 
   const handleProfileSubmit = async (e) => {
@@ -103,13 +112,7 @@ const ProfileView = () => {
 
     if (!validateProfile()) return;
 
-    const { success, error } = await updateProfile(profileData);
-
-    if (success) {
-      toast.success("Profile updated successfully");
-    } else if (error) {
-      toast.error(error || "Failed to update profile");
-    }
+    updateProfileMutation.mutate(formData);
   };
 
   const handlePasswordSubmit = async (e) => {
@@ -117,20 +120,18 @@ const ProfileView = () => {
 
     if (!validatePassword()) return;
 
-    const { success, error } = await updateProfile({
-      password: passwordData.newPassword,
-    });
-
-    if (success) {
-      toast.success("Password updated successfully");
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    } else if (error) {
-      toast.error(error || "Failed to update password");
-    }
+    updateProfileMutation.mutate(
+      { password: passwordData.newPassword },
+      {
+        onSuccess: () => {
+          setPasswordData({
+            currentPassword: "",
+            newPassword: "",
+            confirmPassword: "",
+          });
+        },
+      }
+    );
   };
 
   return (
@@ -172,7 +173,7 @@ const ProfileView = () => {
                         id="name"
                         name="name"
                         placeholder="Your name"
-                        value={profileData.name}
+                        value={formData.name}
                         onChange={handleProfileChange}
                         className="pl-10"
                         error={errors.name}
@@ -191,7 +192,7 @@ const ProfileView = () => {
                         name="email"
                         type="email"
                         placeholder="name@example.com"
-                        value={profileData.email}
+                        value={formData.email}
                         onChange={handleProfileChange}
                         className="pl-10"
                         error={errors.email}
@@ -204,7 +205,7 @@ const ProfileView = () => {
                 <Button
                   type="submit"
                   onClick={handleProfileSubmit}
-                  isLoading={isLoading}
+                  isLoading={updateProfileMutation.isPending}
                   icon={Save}
                 >
                   Save Changes
@@ -283,7 +284,7 @@ const ProfileView = () => {
                 <Button
                   type="submit"
                   onClick={handlePasswordSubmit}
-                  isLoading={isLoading}
+                  isLoading={updateProfileMutation.isPending}
                   icon={Save}
                 >
                   Update Password

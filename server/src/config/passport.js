@@ -18,17 +18,14 @@ passport.use(
     },
     async (req, accessToken, refreshToken, profile, done) => {
       try {
-        // Check if this is an account linking request
         const isLinkingAccount = req.session && req.session.linkAccountUserId;
 
         if (isLinkingAccount) {
-          // Handle account linking for existing user
           const existingUser = await User.findById(
             req.session.linkAccountUserId
           );
 
           if (existingUser) {
-            // Check if Google account is already linked to another user
             const googleUserExists = await User.findOne({
               googleId: profile.id,
             });
@@ -45,7 +42,6 @@ passport.use(
               );
             }
 
-            // Link Google account to existing user
             existingUser.googleId = profile.id;
             existingUser.avatar =
               existingUser.avatar || profile.photos[0]?.value;
@@ -54,14 +50,12 @@ passport.use(
             }
             await existingUser.save();
 
-            // Clear the linking session
             delete req.session.linkAccountUserId;
 
             return done(null, existingUser);
           }
         }
 
-        // Standard OAuth flow
         let user = await User.findOne({ googleId: profile.id });
 
         if (user) {

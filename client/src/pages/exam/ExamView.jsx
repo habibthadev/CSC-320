@@ -15,18 +15,16 @@ import {
 import Badge from "../../components/ui/Badge";
 import { Alert, AlertTitle, AlertDescription } from "../../components/ui/Alert";
 import Modal from "../../components/ui/Modal";
-import useDocumentStore from "../../stores/documentStore";
-import useQuestionStore from "../../stores/questionStore";
-import useExamStore from "../../stores/examStore";
+import { useDocument } from "../../hooks/useDocuments";
+import { useValidateAnswer } from "../../hooks/useQuestions";
 import { fadeIn } from "../../utils/animations";
 
 const ExamView = () => {
   const { documentId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { getDocumentById } = useDocumentStore();
-  const { validateAnswer, isLoading } = useQuestionStore();
-  const { saveExamResults } = useExamStore();
+  const { data: document } = useDocument(documentId);
+  const validateAnswerMutation = useValidateAnswer();
 
   const [questions, setQuestions] = useState(location.state?.questions || []);
   const [answers, setAnswers] = useState({});
@@ -37,8 +35,6 @@ const ExamView = () => {
   const timerRef = useRef(null);
 
   useEffect(() => {
-    getDocumentById(documentId);
-
     timerRef.current = setInterval(() => {
       setTimeSpent((prev) => prev + 1);
     }, 1000);
@@ -46,7 +42,7 @@ const ExamView = () => {
     return () => {
       clearInterval(timerRef.current);
     };
-  }, [documentId, getDocumentById]);
+  }, []);
 
   useEffect(() => {
     if (examRef.current) {
@@ -55,11 +51,11 @@ const ExamView = () => {
   }, [questions]);
 
   useEffect(() => {
-    if (!location.state?.questions && !isLoading) {
+    if (!location.state?.questions || questions.length === 0) {
       toast.error("No questions found. Please generate questions first.");
-      navigate(`/documents/${documentId}`);
+      navigate(`/generate/${documentId}`);
     }
-  }, [location.state, documentId, navigate, isLoading]);
+  }, [location.state, documentId, navigate, questions.length]);
 
   const handleAnswerChange = (questionId, value) => {
     setAnswers((prev) => ({
@@ -84,33 +80,43 @@ const ExamView = () => {
       const validationResults = [];
 
       for (const question of questions) {
-        const { success, data, error } = await validateAnswer(
-          question._id,
-          answers[question._id]
-        );
-
-        if (success) {
-          validationResults.push({
-            questionId: question._id,
-            result: data.result,
-            explanation: data.explanation,
-          });
-        } else {
-          toast.error(`Failed to validate question: ${error}`);
-          setIsSubmitting(false);
-          return;
-        }
+        await new Promise((resolve, reject) => {
+          validateAnswerMutation.mutate(
+            {
+              questionId: question._id,
+              userAnswer: answers[question._id],
+            },
+            {
+              onSuccess: (data) => {
+                validationResults.push({
+                  questionId: question._id,
+                  result: data.result,
+                  explanation: data.explanation,
+                  correctAnswer: data.correctAnswer,
+                });
+                resolve();
+              },
+              onError: (error) => {
+                toast.error(`Failed to validate question: ${error.message}`);
+                reject(error);
+              },
+            }
+          );
+        });
       }
 
       clearInterval(timerRef.current);
 
-      saveExamResults(
-        validationResults,
-        answers,
+      const examResults = {
+        documentId,
         questions,
+        answers,
+        validationResults,
         timeSpent,
-        documentId
-      );
+        completedAt: new Date().toISOString(),
+      };
+
+      localStorage.setItem("examResults", JSON.stringify(examResults));
 
       toast.success("Exam submitted successfully");
       navigate(`/exam/results`);
@@ -129,10 +135,20 @@ const ExamView = () => {
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
-  if (isLoading || !questions.length) {
+  if (!questions.length) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            No Questions Available
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            No questions have been generated for this exam yet.
+          </p>
+          <Button onClick={() => navigate(`/generate/${documentId}`)}>
+            Generate Questions
+          </Button>
+        </div>
       </div>
     );
   }
@@ -170,7 +186,7 @@ const ExamView = () => {
             </CardHeader>
             <CardContent>
               <Alert>
-        
+                <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Important</AlertTitle>
                 <AlertDescription>
                   Answer all {questions.length} questions. Once submitted, you
