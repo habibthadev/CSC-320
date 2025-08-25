@@ -7,13 +7,11 @@ import User from "../models/user.model.js";
 
 const router = express.Router();
 
-
 router.get("/google/link-account", protect, (req, res, next) => {
   req.session.linkAccountUserId = req.user._id;
-
   passport.authenticate("google", {
     scope: ["profile", "email"],
-    state: "link_account", 
+    state: "link_account",
   })(req, res, next);
 });
 
@@ -30,6 +28,12 @@ router.get(
   async (req, res) => {
     try {
       const user = req.user;
+      const isLinkingAccount = req.session && req.session.linkAccountUserId;
+
+      if (isLinkingAccount) {
+        delete req.session.linkAccountUserId;
+        return res.redirect(`${CLIENT_URL}/profile?linked=success`);
+      }
 
       const { accessToken, refreshToken } = generateTokens(user._id);
 
@@ -50,7 +54,6 @@ router.get(
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-
       res.redirect(`${CLIENT_URL}/dashboard?auth=success`);
     } catch (error) {
       console.error("OAuth callback error:", error);
@@ -61,15 +64,7 @@ router.get(
 
 router.post("/google/link", protect, async (req, res) => {
   try {
-    const { googleAuthCode } = req.body;
     const currentUser = req.user;
-
-    if (!googleAuthCode) {
-      return res.status(400).json({
-        success: false,
-        message: "Google authorization code is required",
-      });
-    }
 
     if (currentUser.googleId) {
       return res.status(400).json({
@@ -78,14 +73,10 @@ router.post("/google/link", protect, async (req, res) => {
       });
     }
 
-    // Here you would typically verify the Google auth code and get user info
-    // For now, we'll return a success response indicating the linking process
-    // would need frontend integration with Google OAuth to get the auth code
-
     res.json({
       success: true,
-      message: "To link your Google account, please use the Google OAuth flow",
-      instructions: "Use GET /auth/google while authenticated to link accounts",
+      message: "Please use the OAuth flow to link your Google account",
+      redirectUrl: "/auth/google/link-account",
     });
   } catch (error) {
     console.error("Google link error:", error);
@@ -162,7 +153,6 @@ router.get("/oauth/status", protect, async (req, res) => {
     });
   }
 });
-
 
 router.post("/oauth/logout", (req, res) => {
   try {
