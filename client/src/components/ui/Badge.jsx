@@ -1,38 +1,40 @@
-const Badge = ({
-  children,
-  variant = "default",
-  size = "default",
-  className = "",
-  ...props
-}) => {
-  const variantClasses = {
-    default: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100",
-    primary:
-      "bg-orange-100 text-orange-800 dark:bg-orange-700 dark:text-orange-100",
-    secondary: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100",
-    success:
-      "bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100",
-    warning:
-      "bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100",
-    danger: "bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100",
-    outline:
-      "border border-gray-200 bg-transparent text-gray-900 dark:border-gray-700 dark:text-gray-100",
-  };
+import React from "react";
+import { cva } from "class-variance-authority";
+import { cn } from "../../lib/utils";
 
-  const sizeClasses = {
-    default: "px-2.5 py-0.5 text-xs",
-    sm: "px-2 py-0.5 text-xs",
-    lg: "px-3 py-1 text-sm",
-  };
+const badgeVariants = cva(
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default:
+          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        secondary:
+          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive:
+          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        outline: "text-foreground",
+        success:
+          "border-transparent bg-green-500 text-white hover:bg-green-600",
+        warning:
+          "border-transparent bg-yellow-500 text-white hover:bg-yellow-600",
+        orange:
+          "border-transparent bg-orange text-orange-foreground hover:bg-orange/80",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
 
-  return (
-    <div
-      className={`inline-flex items-center rounded-full font-medium ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-};
+const Badge = React.forwardRef(({ className, variant, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(badgeVariants({ variant }), className)}
+    {...props}
+  />
+));
+Badge.displayName = "Badge";
 
-export default Badge;
+export { Badge, badgeVariants };

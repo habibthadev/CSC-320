@@ -1,13 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, FileText, Scale, Shield } from "lucide-react";
-import Button from "../../components/ui/Button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { fadeIn } from "../../utils/animations";
 
 const PrivacyPolicy = () => {
@@ -17,38 +12,39 @@ const PrivacyPolicy = () => {
     if (contentRef.current) {
       fadeIn(contentRef.current, 0.2);
     }
-
     window.scrollTo(0, 0);
   }, []);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center mb-6">
+    <div className="min-h-screen bg-background">
+      <div className="container max-w-4xl mx-auto px-4 py-8">
+        <div className="flex items-center gap-4 mb-8">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => window.history.back()}
-            icon={ArrowLeft}
-            className="mr-4"
+            className="h-8 w-8 p-0"
           >
-            Back
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Privacy Policy
-          </h1>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Privacy Policy</h1>
+            <p className="text-muted-foreground">How we protect and handle your data</p>
+          </div>
         </div>
 
-        <Card ref={contentRef}>
-          <CardHeader className="flex flex-row items-center gap-4">
-            <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900">
-              <Shield className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-            </div>
-            <CardTitle>Haskmee Privacy Policy</CardTitle>
+        <Card ref={contentRef} className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              <div className="rounded-full bg-primary/10 p-2">
+                <Shield className="h-6 w-6 text-primary" />
+              </div>
+              Haskmee Privacy Policy
+            </CardTitle>
           </CardHeader>
-          <CardContent className="prose dark:prose-invert max-w-none">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Last Updated: April 24, {new Date().getFullYear()}
+          <CardContent className="prose prose-gray max-w-none dark:prose-invert">
+            <p className="text-sm text-muted-foreground border-l-4 border-primary pl-4">
+              Last updated: {new Date().toLocaleDateString()}
             </p>
 
             <h2>1. Introduction</h2>

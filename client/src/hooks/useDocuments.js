@@ -21,7 +21,9 @@ export const useDocument = (id) => {
       return response.data.data;
     },
     enabled: !!id,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -66,8 +68,11 @@ export const useUpdateDocument = () => {
       return response.data.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
       queryClient.setQueryData(["document", data._id], data);
+
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["document-stats"] });
+
       toast.success("Document updated successfully");
     },
     onError: (error) => {

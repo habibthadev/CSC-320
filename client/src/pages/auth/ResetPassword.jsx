@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { KeyRound, Check } from "lucide-react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { KeyRound, CheckCircle, ArrowLeft } from "lucide-react";
 import { toast } from "react-hot-toast";
-import Button from "../../components/ui/Button";
-import Input from "../../components/ui/Input";
-import Label from "../../components/ui/Label";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { Label } from "../../components/ui/Label";
+import { Alert } from "../../components/ui/Alert";
 import {
   Card,
   CardHeader,
@@ -15,8 +16,11 @@ import {
 } from "../../components/ui/Card";
 import useAuthStore from "../../stores/authStore";
 import { fadeIn } from "../../utils/animations";
+import useTheme from "../../hooks/useTheme";
 
 const ResetPassword = () => {
+  useTheme();
+  
   const { token } = useParams();
   const navigate = useNavigate();
   const { resetPasswordWithToken, isLoading } = useAuthStore();
@@ -84,23 +88,25 @@ const ResetPassword = () => {
 
   if (isSuccess) {
     return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-8rem)] px-4 py-12">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
-            <div className="mx-auto rounded-full bg-green-100 p-3 w-16 h-16 flex items-center justify-center dark:bg-green-900">
-              <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md border bg-card">
+          <CardHeader className="space-y-4">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-teal-100 dark:bg-teal-900">
+              <CheckCircle className="h-10 w-10 text-teal-600 dark:text-teal-400" />
             </div>
-            <CardTitle className="text-2xl font-bold text-center">
-              Password Reset Successful
-            </CardTitle>
-            <CardDescription className="text-center">
-              Your password has been reset successfully. You can now login with
-              your new password.
-            </CardDescription>
+            <div className="space-y-2 text-center">
+              <CardTitle className="text-2xl font-bold tracking-tight text-card-foreground">
+                Password Reset Successful
+              </CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Your password has been reset successfully. You can now login
+                with your new password.
+              </CardDescription>
+            </div>
           </CardHeader>
-          <CardContent className="flex justify-center pt-4">
-            <Button to="/login" className="w-full max-w-xs">
-              Go to Login
+          <CardContent className="pt-4">
+            <Button asChild className="w-full bg-teal-600 hover:bg-teal-700 text-white dark:bg-teal-500 dark:hover:bg-teal-600">
+              <Link to="/login">Go to Login</Link>
             </Button>
           </CardContent>
         </Card>
@@ -109,24 +115,32 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-8rem)] px-4 py-12">
-      <Card className="w-full max-w-md" ref={formRef}>
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Link
+        to="/login"
+        className="absolute top-4 left-4 z-10 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Login
+      </Link>
+
+      <Card className="w-full max-w-md border bg-card" ref={formRef}>
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
+          <CardTitle className="text-2xl font-bold tracking-tight text-card-foreground">
             Reset Your Password
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-muted-foreground">
             Enter a new password for your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password" required>
+              <Label htmlFor="password" required className="text-foreground">
                 New Password
               </Label>
               <div className="relative">
-                <KeyRound className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                 <Input
                   id="password"
                   name="password"
@@ -134,17 +148,17 @@ const ResetPassword = () => {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
-                  className="pl-10"
+                  className="pl-10 border-input bg-background text-foreground focus:border-teal-500 focus:ring-teal-500"
                   error={errors.password}
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" required>
+              <Label htmlFor="confirmPassword" required className="text-foreground">
                 Confirm New Password
               </Label>
               <div className="relative">
-                <KeyRound className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -152,23 +166,16 @@ const ResetPassword = () => {
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="pl-10"
+                  className="pl-10 border-input bg-background text-foreground focus:border-teal-500 focus:ring-teal-500"
                   error={errors.confirmPassword}
                 />
               </div>
             </div>
+            <Button type="submit" isLoading={isLoading} className="w-full bg-teal-600 hover:bg-teal-700 text-white dark:bg-teal-500 dark:hover:bg-teal-600">
+              Reset Password
+            </Button>
           </form>
         </CardContent>
-        <CardFooter>
-          <Button
-            type="submit"
-            onClick={handleSubmit}
-            isLoading={isLoading}
-            className="w-full"
-          >
-            Reset Password
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   );

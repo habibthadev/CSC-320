@@ -65,7 +65,7 @@ export const generateQuestionsFromDocument = asyncHandler(async (req, res) => {
       })
     );
 
-    if (NODE_ENV === "serverless") {
+    if (NODE_ENV === "production") {
       cleanupTempFiles();
     }
 
@@ -111,7 +111,7 @@ export const validateUserAnswer = asyncHandler(async (req, res) => {
       userAnswer.trim()
     );
 
-    if (NODE_ENV === "serverless") {
+    if (NODE_ENV === "production") {
       cleanupTempFiles();
     }
 

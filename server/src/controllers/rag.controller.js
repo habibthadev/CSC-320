@@ -13,7 +13,7 @@ import { cleanupTempFiles } from "../utils/file-processing.js";
 import { NODE_ENV } from "../config/env.js";
 
 export const chatWithDocument = asyncHandler(async (req, res) => {
-  const { query } = req.body;
+  const { query, conversationHistory = [] } = req.body;
   const documentId = req.params.documentId;
 
   if (!query || query.trim().length === 0) {
@@ -34,7 +34,6 @@ export const chatWithDocument = asyncHandler(async (req, res) => {
   }
 
   try {
-
     const documents = [
       {
         _id: document._id,
@@ -59,15 +58,31 @@ export const chatWithDocument = asyncHandler(async (req, res) => {
             "I couldn't find relevant information in this document to answer your question.",
           documentTitle: document.title,
           chunksUsed: 0,
+          sources: [],
         },
       });
       return;
     }
 
-    const context = relevantContent.map((item) => item.content).join("\n\n");
-    const response = await generateRagResponse(query, context);
+    const contextWithSources = relevantContent.map((item, index) => ({
+      content: item.content,
+      source: `[Source ${index + 1} from "${document.title}"]`,
+      similarity: item.similarity,
+      startIndex: item.startIndex || 0,
+      endIndex: item.endIndex || item.content.length,
+    }));
 
-    if (NODE_ENV === "serverless") {
+    const context = contextWithSources
+      .map((item) => `${item.source}: ${item.content}`)
+      .join("\n\n");
+
+    const response = await generateRagResponse(
+      query,
+      context,
+      conversationHistory
+    );
+
+    if (NODE_ENV === "production") {
       cleanupTempFiles();
     }
 
@@ -81,6 +96,16 @@ export const chatWithDocument = asyncHandler(async (req, res) => {
         avgSimilarity:
           relevantContent.reduce((sum, item) => sum + item.similarity, 0) /
           relevantContent.length,
+        sources: contextWithSources.map((item, index) => ({
+          id: index + 1,
+          title: document.title,
+          content:
+            item.content.substring(0, 200) +
+            (item.content.length > 200 ? "..." : ""),
+          similarity: item.similarity,
+          startIndex: item.startIndex,
+          endIndex: item.endIndex,
+        })),
       },
     });
   } catch (error) {
@@ -90,7 +115,7 @@ export const chatWithDocument = asyncHandler(async (req, res) => {
 });
 
 export const chatWithMultipleDocuments = asyncHandler(async (req, res) => {
-  const { query, documentIds } = req.body;
+  const { query, documentIds, conversationHistory = [] } = req.body;
 
   if (!query || query.trim().length === 0) {
     throw new AppError("Query is required and cannot be empty", 400);
@@ -161,9 +186,13 @@ export const chatWithMultipleDocuments = asyncHandler(async (req, res) => {
       .map((item) => `[From "${item.documentTitle}"]: ${item.content}`)
       .join("\n\n");
 
-    const response = await generateRagResponse(query, context);
+    const response = await generateRagResponse(
+      query,
+      context,
+      conversationHistory
+    );
 
-    if (NODE_ENV === "serverless") {
+    if (NODE_ENV === "production") {
       cleanupTempFiles();
     }
 
@@ -193,7 +222,7 @@ export const chatWithMultipleDocuments = asyncHandler(async (req, res) => {
 });
 
 export const generalChat = asyncHandler(async (req, res) => {
-  const { message } = req.body;
+  const { message, conversationHistory = [] } = req.body;
 
   if (!message || message.trim().length === 0) {
     throw new AppError("Message is required and cannot be empty", 400);
@@ -207,9 +236,9 @@ export const generalChat = asyncHandler(async (req, res) => {
   }
 
   try {
-    const response = await generateChatResponse(message);
+    const result = await generateChatResponse(message, conversationHistory);
 
-    if (NODE_ENV === "serverless") {
+    if (NODE_ENV === "production") {
       cleanupTempFiles();
     }
 
@@ -217,8 +246,10 @@ export const generalChat = asyncHandler(async (req, res) => {
       success: true,
       data: {
         message,
-        response,
+        response: result.text,
         timestamp: new Date().toISOString(),
+        sources: result.sources || [],
+        hasWebSearch: result.hasWebSearch || false,
       },
     });
   } catch (error) {

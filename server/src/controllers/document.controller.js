@@ -105,7 +105,7 @@ export const uploadDocument = asyncHandler(async (req, res) => {
     }
   }
 
-  if (NODE_ENV === "serverless") {
+  if (NODE_ENV === "production") {
     cleanupTempFiles();
   }
 

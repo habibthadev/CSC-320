@@ -4,8 +4,11 @@ import api from "../utils/api";
 
 export const useChatWithDocument = () => {
   return useMutation({
-    mutationFn: async ({ documentId, query }) => {
-      const response = await api.post(`/api/rag/chat/${documentId}`, { query });
+    mutationFn: async ({ documentId, query, conversationHistory = [] }) => {
+      const response = await api.post(`/api/rag/chat/${documentId}`, {
+        query,
+        conversationHistory,
+      });
       return response.data.data;
     },
     onError: (error) => {
@@ -17,8 +20,12 @@ export const useChatWithDocument = () => {
 
 export const useChatWithMultipleDocuments = () => {
   return useMutation({
-    mutationFn: async ({ documentIds, query }) => {
-      const response = await api.post("/api/rag/chat", { documentIds, query });
+    mutationFn: async ({ documentIds, query, conversationHistory = [] }) => {
+      const response = await api.post("/api/rag/chat", {
+        documentIds,
+        query,
+        conversationHistory,
+      });
       return response.data.data;
     },
     onError: (error) => {
@@ -30,9 +37,10 @@ export const useChatWithMultipleDocuments = () => {
 
 export const useGeneralChat = () => {
   return useMutation({
-    mutationFn: async ({ query }) => {
+    mutationFn: async ({ query, conversationHistory = [] }) => {
       const response = await api.post("/api/rag/general-chat", {
         message: query,
+        conversationHistory,
       });
       return response.data.data;
     },

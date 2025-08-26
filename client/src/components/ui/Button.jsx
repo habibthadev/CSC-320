@@ -1,75 +1,104 @@
+import React from "react";
 import { Link } from "react-router-dom";
+import { Slot } from "@radix-ui/react-slot";
+import { cva } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
+import { cn } from "../../lib/utils";
 
-const Button = ({
-  children,
-  variant = "primary",
-  size = "md",
-  isLoading = false,
-  disabled = false,
-  className = "",
-  to,
-  onClick,
-  type = "button",
-  icon: Icon,
-  ...props
-}) => {
-  const baseClasses =
-    "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none";
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+        orange: "bg-orange text-orange-foreground hover:bg-orange/90",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+);
 
-  const sizeClasses = {
-    sm: "h-9 px-3 text-xs",
-    md: "h-10 py-2 px-4",
-    lg: "h-11 px-8 text-base",
-    icon: "h-10 w-10",
-  };
+const Button = React.forwardRef(
+  (
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      isLoading = false,
+      children,
+      to,
+      icon: Icon,
+      disabled,
+      ...props
+    },
+    ref
+  ) => {
+    const Comp = asChild ? Slot : to ? Link : "button";
 
-  const variantClasses = {
-    primary:
-      "bg-orange-600 text-white hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700",
-    secondary:
-      "bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600",
-    outline:
-      "border border-gray-300 bg-transparent hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800 dark:text-gray-100",
-    ghost:
-      "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-100",
-    link: "bg-transparent underline-offset-4 hover:underline text-orange-600 dark:text-orange-400 hover:bg-transparent",
-    danger:
-      "bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700",
-  };
+    if (to) {
+      return (
+        <Comp
+          to={to}
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          {...props}
+        >
+          {isLoading ? (
+            <span className="flex items-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {children}
+            </span>
+          ) : (
+            <span className="flex items-center">
+              {Icon && <Icon className="mr-2 h-4 w-4" />}
+              {children}
+            </span>
+          )}
+        </Comp>
+      );
+    }
 
-  const classes = `${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`;
-
-  if (to) {
     return (
-      <Link to={to} className={classes} {...props}>
-        {Icon && <Icon className="mr-2 h-4 w-4" />}
-        {children}
-      </Link>
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        disabled={disabled || isLoading}
+        {...props}
+      >
+        {isLoading ? (
+          <span className="flex items-center">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {children}
+          </span>
+        ) : (
+          <span className="flex items-center">
+            {Icon && <Icon className="mr-2 h-4 w-4" />}
+            {children}
+          </span>
+        )}
+      </Comp>
     );
   }
+);
+Button.displayName = "Button";
 
-  return (
-    <button
-      type={type}
-      className={classes}
-      disabled={disabled || isLoading}
-      onClick={onClick}
-      {...props}
-    >
-      {isLoading ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          {children}
-        </>
-      ) : (
-        <>
-          {Icon && <Icon className="mr-2 h-4 w-4" />}
-          {children}
-        </>
-      )}
-    </button>
-  );
-};
-
+export { Button, buttonVariants };
 export default Button;

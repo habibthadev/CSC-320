@@ -1,20 +1,24 @@
-import { forwardRef } from "react";
+import React from "react";
+import { cn } from "../../lib/utils";
 
-const Textarea = forwardRef(({ className = "", error, ...props }, ref) => {
+const Textarea = React.forwardRef(({ className, error, ...props }, ref) => {
   return (
     <div className="relative">
       <textarea
-        className={`flex min-h-[80px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500 ${
-          error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""
-        } ${className}`}
+        className={cn(
+          "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          error && "border-destructive focus-visible:ring-destructive",
+          className
+        )}
         ref={ref}
         {...props}
       />
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
     </div>
   );
 });
-
 Textarea.displayName = "Textarea";
+
+export { Textarea };
 
 export default Textarea;
