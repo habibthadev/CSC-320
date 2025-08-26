@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, ArrowLeft, KeyRound } from "lucide-react";
-import Button from "../../components/ui/Button";
-import Input from "../../components/ui/Input";
-import Label from "../../components/ui/Label";
+import { Mail, ArrowLeft, KeyRound, CheckCircle } from "lucide-react";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { Label } from "../../components/ui/Label";
+import { Alert } from "../../components/ui/Alert";
 import {
   Card,
   CardHeader,
@@ -18,8 +19,11 @@ import {
   useResetPassword,
   useAuth,
 } from "../../hooks/useAuth";
+import useTheme from "../../hooks/useTheme";
 
 const ForgotPassword = () => {
+  useTheme();
+  
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -31,7 +35,6 @@ const ForgotPassword = () => {
 
   const { isAuthenticated } = useAuth();
   const forgotPasswordMutation = useForgotPassword();
-
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -130,62 +133,76 @@ const ForgotPassword = () => {
     switch (step) {
       case 1:
         return (
-          <form onSubmit={handleSendOTP} className="space-y-4" ref={formRef}>
+          <form onSubmit={handleSendOTP} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" required>
-                Email
+              <Label htmlFor="email" required className="text-foreground">
+                Email Address
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="name@example.com"
+                  placeholder="Enter your email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 border-input bg-background text-foreground focus:border-teal-500 focus:ring-teal-500"
                   error={errors.email}
                 />
               </div>
             </div>
+            {forgotPasswordMutation.isError && (
+              <Alert variant="destructive" className="border-red-200 dark:border-red-800">
+                {forgotPasswordMutation.error?.response?.data?.message ||
+                  "Failed to send reset code"}
+              </Alert>
+            )}
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white dark:bg-teal-500 dark:hover:bg-teal-600"
               isLoading={forgotPasswordMutation.isPending}
             >
-              Send OTP
+              Send Reset Code
             </Button>
           </form>
         );
       case 2:
         return (
-          <form onSubmit={handleVerifyOTP} className="space-y-4" ref={formRef}>
+          <form onSubmit={handleVerifyOTP} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="otp" required>
-                Enter OTP
+              <Label htmlFor="otp" required className="text-foreground">
+                Verification Code
               </Label>
               <Input
                 id="otp"
-                placeholder="6-digit OTP"
+                placeholder="Enter 6-digit code"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 error={errors.otp}
+                className="text-center text-lg tracking-widest border-input bg-background text-foreground focus:border-teal-500 focus:ring-teal-500"
+                maxLength={6}
               />
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Please enter the 6-digit OTP sent to your email
+              <p className="text-sm text-muted-foreground">
+                Please enter the 6-digit code sent to {email}
               </p>
             </div>
+            {verifyOTPMutation.isError && (
+              <Alert variant="destructive" className="border-red-200 dark:border-red-800">
+                {verifyOTPMutation.error?.response?.data?.message ||
+                  "Invalid verification code"}
+              </Alert>
+            )}
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white dark:bg-teal-500 dark:hover:bg-teal-600"
               isLoading={verifyOTPMutation.isPending}
             >
-              Verify OTP
+              Verify Code
             </Button>
             <Button
               type="button"
-              variant="link"
-              className="w-full"
+              variant="outline"
+              className="w-full border-input text-foreground hover:bg-muted"
               onClick={() => setStep(1)}
             >
               Back to Email
@@ -194,48 +211,50 @@ const ForgotPassword = () => {
         );
       case 3:
         return (
-          <form
-            onSubmit={handleResetPassword}
-            className="space-y-4"
-            ref={formRef}
-          >
+          <form onSubmit={handleResetPassword} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password" required>
+              <Label htmlFor="password" required className="text-foreground">
                 New Password
               </Label>
               <div className="relative">
-                <KeyRound className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                 <Input
                   id="password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 border-input bg-background text-foreground focus:border-teal-500 focus:ring-teal-500"
                   error={errors.password}
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" required>
+              <Label htmlFor="confirmPassword" required className="text-foreground">
                 Confirm New Password
               </Label>
               <div className="relative">
-                <KeyRound className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                 <Input
                   id="confirmPassword"
                   type="password"
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 border-input bg-background text-foreground focus:border-teal-500 focus:ring-teal-500"
                   error={errors.confirmPassword}
                 />
               </div>
             </div>
+            {resetPasswordMutation.isError && (
+              <Alert variant="destructive" className="border-red-200 dark:border-red-800">
+                {resetPasswordMutation.error?.response?.data?.message ||
+                  "Failed to reset password"}
+              </Alert>
+            )}
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white dark:bg-teal-500 dark:hover:bg-teal-600"
               isLoading={resetPasswordMutation.isPending}
             >
               Reset Password
@@ -244,32 +263,21 @@ const ForgotPassword = () => {
         );
       case 4:
         return (
-          <div className="space-y-4 text-center" ref={formRef}>
-            <div className="rounded-full bg-green-100 p-3 w-16 h-16 mx-auto flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
+          <div className="space-y-6 text-center">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-teal-100 dark:bg-teal-900">
+              <CheckCircle className="h-10 w-10 text-teal-600 dark:text-teal-400" />
             </div>
-            <h3 className="text-xl font-medium text-gray-900 dark:text-white">
-              Password Reset Successful
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Your password has been reset successfully. You can now login with
-              your new password.
-            </p>
-            <Button to="/login" className="w-full">
-              Go to Login
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold text-card-foreground">
+                Password Reset Successful
+              </h3>
+              <p className="text-muted-foreground">
+                Your password has been reset successfully. You can now login
+                with your new password.
+              </p>
+            </div>
+            <Button asChild className="w-full bg-teal-600 hover:bg-teal-700 text-white dark:bg-teal-500 dark:hover:bg-teal-600">
+              <Link to="/login">Go to Login</Link>
             </Button>
           </div>
         );
@@ -279,39 +287,35 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-8rem)] px-4 py-12">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Link
+        to="/login"
+        className="absolute top-4 left-4 z-10 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Login
+      </Link>
+
+      <Card className="w-full max-w-md border bg-card" ref={formRef}>
         <CardHeader className="space-y-1">
-          <div className="flex items-center justify-between">
-            {step < 4 && (
-              <Link
-                to="/login"
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-            )}
-            <CardTitle className="text-2xl font-bold text-center flex-grow">
-              {step === 4 ? "Success" : "Reset Password"}
-            </CardTitle>
-            <div className="w-5"></div>
-          </div>
-          {step < 4 && (
-            <CardDescription className="text-center">
-              {step === 1 && "Enter your email to receive a password reset OTP"}
-              {step === 2 && "Enter the OTP sent to your email"}
-              {step === 3 && "Create a new password for your account"}
-            </CardDescription>
-          )}
+          <CardTitle className="text-2xl font-bold tracking-tight text-card-foreground">
+            {step === 4 ? "Password Reset" : "Reset Password"}
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            {step === 1 && "Enter your email to receive a password reset code"}
+            {step === 2 && "Enter the 6-digit code sent to your email"}
+            {step === 3 && "Create a new password for your account"}
+            {step === 4 && "Your password has been successfully reset"}
+          </CardDescription>
         </CardHeader>
         <CardContent>{renderStep()}</CardContent>
         {step < 4 && (
           <CardFooter className="flex flex-col">
-            <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-2">
+            <p className="text-center text-sm text-muted-foreground mt-2">
               Remember your password?{" "}
               <Link
                 to="/login"
-                className="text-orange-600 hover:text-orange-700 dark:text-orange-500 dark:hover:text-orange-400"
+                className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 font-medium underline underline-offset-4"
               >
                 Login
               </Link>

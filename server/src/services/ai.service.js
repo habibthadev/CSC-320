@@ -8,6 +8,10 @@ const model = google("gemini-2.0-flash", {
   apiKey: GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
+const modelWithSearch = google("gemini-2.0-flash", {
+  apiKey: GOOGLE_GENERATIVE_AI_API_KEY,
+});
+
 const questionSchema = z.object({
   preview: z.string().describe("A short summary of the document content"),
   questions: z.array(
@@ -84,24 +88,43 @@ The user's answer doesn't need to be word-for-word identical but should capture 
   }
 };
 
-export const generateRagResponse = async (query, context) => {
+export const generateRagResponse = async (
+  query,
+  context,
+  conversationHistory = []
+) => {
   try {
     if (!context || context.trim().length === 0) {
       return "I don't have any document content to reference for answering your question.";
     }
 
-    const prompt = `Based on the following document content, answer the user's question.
+    let conversationContext = "";
+    if (conversationHistory.length > 0) {
+      const recentHistory = conversationHistory.slice(-6);
+      conversationContext = `
 
+Previous conversation context:
+${recentHistory.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}
+
+---
+
+`;
+    }
+
+    const prompt = `Based on the following document content and conversation history, answer the user's question.
+${conversationContext}
 Document content:
 ${context}
 
-User question: ${query}
+Current user question: ${query}
 
 Instructions:
 - Answer based only on the provided document content
+- Use the conversation history to better understand the context and user's intent
 - If the document doesn't contain relevant information, state that clearly
 - Provide a clear, concise answer
-- Do not make up information not in the document`;
+- Do not make up information not in the document
+- Reference specific parts of the document when applicable`;
 
     const result = await generateText({
       model,
@@ -117,34 +140,129 @@ Instructions:
   }
 };
 
-export const generateChatResponse = async (message, context = null) => {
+export const generateChatResponse = async (
+  message,
+  conversationHistory = [],
+  context = null
+) => {
   try {
-    let prompt = `You are a helpful AI assistant. Answer the user's question clearly and concisely.
+    let conversationContext = "";
+    if (conversationHistory.length > 0) {
+      const recentHistory = conversationHistory.slice(-8);
+      conversationContext = `
 
-User question: ${message}`;
+Previous conversation:
+${recentHistory.map((msg) => `${msg.role}: ${msg.content}`).join("\n")}
 
-    if (context) {
-      prompt = `You are a helpful AI assistant with access to document content. Use the provided context to answer the user's question.
+---
+
+`;
+    }
+
+    const needsWebSearch = await shouldUseWebSearch(
+      message,
+      conversationHistory
+    );
+
+    if (needsWebSearch) {
+      const result = await generateText({
+        model: modelWithSearch,
+        tools: {
+          google_search: google.tools.googleSearch({}),
+        },
+        prompt: `${conversationContext}You are a helpful AI assistant with access to real-time web information. Answer the user's question using current information from the web when relevant.
+
+Current user question: ${message}
+
+Instructions:
+- Use web search to find current, accurate information
+- Provide citations and sources for your information
+- Be comprehensive but concise
+- Include relevant links when available`,
+        temperature: 0.7,
+        maxTokens: 1500,
+      });
+
+      return {
+        text: result.text,
+        sources: result.sources || [],
+        hasWebSearch: true,
+      };
+    } else {
+      let prompt = `${conversationContext}You are a helpful AI assistant. Answer the user's question clearly and concisely based on your knowledge and the conversation context.
+
+Current user question: ${message}`;
+
+      if (context) {
+        prompt = `${conversationContext}You are a helpful AI assistant with access to document content. Use the provided context to answer the user's question.
 
 Context:
 ${context}
 
-User question: ${message}
+Current user question: ${message}
 
 Answer based on the context when relevant, but you can also provide general knowledge if the context doesn't contain the needed information.`;
+      }
+
+      const result = await generateText({
+        model,
+        prompt,
+        temperature: 0.7,
+        maxTokens: 1500,
+      });
+
+      return {
+        text: result.text,
+        sources: [],
+        hasWebSearch: false,
+      };
     }
+  } catch (error) {
+    console.error("Error generating chat response:", error);
+    throw new AppError("Failed to generate chat response using AI", 500);
+  }
+};
+
+const shouldUseWebSearch = async (message, conversationHistory = []) => {
+  try {
+    const prompt = `Analyze this user message and conversation history to determine if real-time web information is needed.
+
+Message: "${message}"
+
+Conversation context: ${conversationHistory
+      .slice(-4)
+      .map((msg) => `${msg.role}: ${msg.content}`)
+      .join("\n")}
+
+Return true if the query involves:
+- Current events, news, or recent developments
+- Real-time data (weather, stock prices, sports scores)
+- Recent technology updates or releases
+- Current market information
+- Time-sensitive information
+- Questions about "latest", "recent", "current", "today", "this week", etc.
+
+Return false for:
+- General knowledge questions
+- Historical information
+- Theoretical discussions
+- Personal advice
+- Math/calculations
+- Programming help (unless about recent frameworks/updates)
+
+Response format: just "true" or "false"`;
 
     const result = await generateText({
       model,
       prompt,
-      temperature: 0.7,
-      maxTokens: 1500,
+      temperature: 0.1,
+      maxTokens: 10,
     });
 
-    return result.text;
+    return result.text.toLowerCase().trim() === "true";
   } catch (error) {
-    console.error("Error generating chat response:", error);
-    throw new AppError("Failed to generate chat response using AI", 500);
+    console.error("Error determining web search need:", error);
+    return false;
   }
 };
 

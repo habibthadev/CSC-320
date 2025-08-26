@@ -1,23 +1,33 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import { ArrowLeft, Clock, Send, AlertCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock,
+  Send,
+  AlertCircle,
+  CheckCircle,
+  BookOpen,
+  Timer,
+} from "lucide-react";
 
-import Button from "../../components/ui/Button";
-import Textarea from "../../components/ui/Textarea";
-import Label from "../../components/ui/Label";
+import { Button } from "../../components/ui/Button";
+import { Textarea } from "../../components/ui/Textarea";
+import { Label } from "../../components/ui/Label";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
 } from "../../components/ui/Card";
-import Badge from "../../components/ui/Badge";
-import { Alert, AlertTitle, AlertDescription } from "../../components/ui/Alert";
-import Modal from "../../components/ui/Modal";
+import { Badge } from "../../components/ui/Badge";
+import { Alert } from "../../components/ui/Alert";
+import { Modal } from "../../components/ui/Modal";
+import { Spinner } from "../../components/ui/Spinner";
 import { useDocument } from "../../hooks/useDocuments";
 import { useValidateAnswer } from "../../hooks/useQuestions";
 import { fadeIn } from "../../utils/animations";
+import { cn } from "../../utils";
 
 const ExamView = () => {
   const { documentId } = useParams();
@@ -137,15 +147,21 @@ const ExamView = () => {
 
   if (!questions.length) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+      <div className="min-h-screen bg-background px-4 py-16">
+        <div className="max-w-md mx-auto text-center">
+          <div className="rounded-full bg-muted p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+            <BookOpen className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h1 className="text-2xl font-semibold mb-2">
             No Questions Available
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-muted-foreground mb-6">
             No questions have been generated for this exam yet.
           </p>
-          <Button onClick={() => navigate(`/generate/${documentId}`)}>
+          <Button
+            onClick={() => navigate(`/generate/${documentId}`)}
+            className="w-full"
+          >
             Generate Questions
           </Button>
         </div>
@@ -154,108 +170,199 @@ const ExamView = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
+    <div className="min-h-screen bg-background">
+      <div className="container max-w-4xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate(`/documents/${documentId}`)}
-              icon={ArrowLeft}
-              className="mr-4"
+              className="h-8 w-8 p-0"
             >
-              Back to Document
+              <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Exam Questions
-            </h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="flex items-center text-gray-600 dark:text-gray-300">
-              <Clock className="h-4 w-4 mr-1" />
-              <span>{formatTime(timeSpent)}</span>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Exam Questions
+              </h1>
+              <p className="text-muted-foreground">
+                Answer all questions to complete the exam
+              </p>
             </div>
+          </div>
+          <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
+            <Timer className="h-4 w-4 text-muted-foreground" />
+            <span className="font-mono text-sm font-medium">
+              {formatTime(timeSpent)}
+            </span>
           </div>
         </div>
 
-        <div ref={examRef}>
-          <Card className="mb-6">
+        <div ref={examRef} className="space-y-6">
+          <Card className="border-dashed">
             <CardHeader>
-              <CardTitle>Exam Instructions</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-primary" />
+                Exam Instructions
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Important</AlertTitle>
-                <AlertDescription>
-                  Answer all {questions.length} questions. Once submitted, you
-                  cannot change your answers. Your answers will be evaluated and
-                  corrections will be provided.
-                </AlertDescription>
+              <Alert className="border-primary/20 bg-primary/5">
+                <div className="space-y-2">
+                  <p className="font-medium">Important Guidelines:</p>
+                  <ul className="text-sm space-y-1 ml-4 list-disc">
+                    <li>
+                      Answer all {questions.length} questions to submit the exam
+                    </li>
+                    <li>Once submitted, you cannot change your answers</li>
+                    <li>
+                      Your answers will be evaluated with detailed feedback
+                    </li>
+                    <li>Take your time to provide thoughtful responses</li>
+                  </ul>
+                </div>
               </Alert>
             </CardContent>
           </Card>
 
-          <div className="space-y-6 mb-6">
+          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-success-600" />
+              <span className="text-sm font-medium">
+                Progress:{" "}
+                {
+                  Object.keys(answers).filter((id) => answers[id]?.trim())
+                    .length
+                }{" "}
+                / {questions.length} answered
+              </span>
+            </div>
+            <div className="w-32 bg-muted rounded-full h-2">
+              <div
+                className="bg-primary h-2 rounded-full transition-all duration-300"
+                style={{
+                  width: `${
+                    (Object.keys(answers).filter((id) => answers[id]?.trim())
+                      .length /
+                      questions.length) *
+                    100
+                  }%`,
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-6">
             {questions.map((question, index) => (
-              <Card key={question._id}>
+              <Card key={question._id} className="border-0 shadow-lg">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Question {index + 1}</CardTitle>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="flex items-center gap-2">
+                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-semibold">
+                          {index + 1}
+                        </span>
+                        Question {index + 1}
+                      </CardTitle>
+                      {question.tags && question.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {question.tags.map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <Badge
                       variant={
                         question.difficulty === "easy"
-                          ? "success"
+                          ? "default"
                           : question.difficulty === "medium"
-                          ? "warning"
-                          : "danger"
+                          ? "secondary"
+                          : "destructive"
                       }
+                      className="ml-4"
                     >
                       {question.difficulty}
                     </Badge>
                   </div>
-                  {question.tags && question.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {question.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-lg text-gray-900 dark:text-white">
-                    {question.question}
-                  </p>
+                  <div className="p-4 bg-muted/20 rounded-lg border-l-4 border-primary">
+                    <p className="text-base leading-relaxed">
+                      {question.question}
+                    </p>
+                  </div>
                   <div className="space-y-2">
-                    <Label htmlFor={`answer-${question._id}`} required>
-                      Your Answer
+                    <Label
+                      htmlFor={`answer-${question._id}`}
+                      className="text-base"
+                    >
+                      Your Answer <span className="text-destructive">*</span>
                     </Label>
                     <Textarea
                       id={`answer-${question._id}`}
-                      placeholder="Type your answer here..."
+                      placeholder="Type your detailed answer here..."
                       value={answers[question._id] || ""}
                       onChange={(e) =>
                         handleAnswerChange(question._id, e.target.value)
                       }
-                      className="min-h-[100px]"
+                      className="min-h-[120px] resize-none"
                     />
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>
+                        {answers[question._id]?.length || 0} characters
+                      </span>
+                      {answers[question._id]?.trim() && (
+                        <div className="flex items-center gap-1 text-success-600">
+                          <CheckCircle className="h-3 w-3" />
+                          <span>Answered</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          <div className="flex justify-end">
-            <Button
-              onClick={() => setShowSubmitModal(true)}
-              disabled={!isExamComplete() || isSubmitting}
-              icon={Send}
-            >
-              Submit Exam
-            </Button>
+          <div className="sticky bottom-4 pt-6">
+            <Card className="border-primary/20 bg-background/95 backdrop-blur-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="h-4 w-4" />
+                    <span>Time spent: {formatTime(timeSpent)}</span>
+                  </div>
+                  <Button
+                    onClick={() => setShowSubmitModal(true)}
+                    disabled={!isExamComplete() || isSubmitting}
+                    className={cn(
+                      "min-w-[140px]",
+                      isExamComplete() && "bg-success-600 hover:bg-success-700"
+                    )}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Spinner className="mr-2 h-4 w-4" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Submit Exam
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
@@ -263,21 +370,52 @@ const ExamView = () => {
           isOpen={showSubmitModal}
           onClose={() => setShowSubmitModal(false)}
           title="Submit Exam"
+          description="Confirm your exam submission"
         >
           <div className="space-y-4">
-            <p className="text-gray-700 dark:text-gray-300">
+            <div className="p-4 bg-muted/30 rounded-lg">
+              <h4 className="font-medium mb-2">Exam Summary</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Questions answered:</span>
+                  <span className="font-medium">
+                    {
+                      Object.keys(answers).filter((id) => answers[id]?.trim())
+                        .length
+                    }{" "}
+                    / {questions.length}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Time spent:</span>
+                  <span className="font-medium">{formatTime(timeSpent)}</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-muted-foreground">
               Are you sure you want to submit your exam? You won't be able to
               change your answers after submission.
             </p>
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end gap-3">
               <Button
                 variant="outline"
                 onClick={() => setShowSubmitModal(false)}
               >
-                Cancel
+                Review Again
               </Button>
-              <Button onClick={handleSubmit} isLoading={isSubmitting}>
-                Submit Exam
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="bg-success-600 hover:bg-success-700"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Spinner className="mr-2 h-4 w-4" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Confirm Submit"
+                )}
               </Button>
             </div>
           </div>

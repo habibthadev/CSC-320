@@ -73,7 +73,7 @@ export const extractTextFromImage = async (buffer, mimetype) => {
   let worker = null;
 
   try {
-    if (NODE_ENV === "serverless") {
+    if (NODE_ENV === "production") {
       worker = await createWorker({
         logger: () => {},
         corePath:
@@ -98,13 +98,13 @@ export const extractTextFromImage = async (buffer, mimetype) => {
       data: { text },
     } = await worker.recognize(buffer);
 
-    if (NODE_ENV === "serverless") {
+    if (NODE_ENV === "production") {
       await worker.terminate();
     }
 
     return text || "No text found in image.";
   } catch (error) {
-    if (worker && NODE_ENV === "serverless") {
+    if (worker && NODE_ENV === "production") {
       try {
         await worker.terminate();
       } catch (terminateError) {
@@ -173,7 +173,7 @@ export const processFile = async (file) => {
 };
 
 export const cleanupTempFiles = () => {
-  if (NODE_ENV !== "serverless") return;
+  if (NODE_ENV !== "production") return;
 
   try {
     const tempFiles = fs.readdirSync("/tmp");

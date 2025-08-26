@@ -1,90 +1,43 @@
-import React, { useState } from "react";
+import React from "react";
+import * as TabsPrimitive from "@radix-ui/react-tabs";
+import { cn } from "../../lib/utils";
 
-const Tabs = ({
-  children,
-  defaultValue,
-  value,
-  onValueChange,
-  className = "",
-  ...props
-}) => {
-  const [activeTab, setActiveTab] = useState(value || defaultValue);
+const Tabs = TabsPrimitive.Root;
 
-  const handleTabChange = (newValue) => {
-    if (!value) {
-      setActiveTab(newValue);
-    }
-    onValueChange?.(newValue);
-  };
+const TabsList = React.forwardRef(({ className, ...props }, ref) => (
+  <TabsPrimitive.List
+    ref={ref}
+    className={cn(
+      "inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
+      className
+    )}
+    {...props}
+  />
+));
+TabsList.displayName = TabsPrimitive.List.displayName;
 
-  const triggers = React.Children.toArray(children).filter(
-    (child) => child.type.displayName === "TabsTrigger"
-  );
+const TabsTrigger = React.forwardRef(({ className, ...props }, ref) => (
+  <TabsPrimitive.Trigger
+    ref={ref}
+    className={cn(
+      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+      className
+    )}
+    {...props}
+  />
+));
+TabsTrigger.displayName = TabsPrimitive.Trigger.displayName;
 
-  const contents = React.Children.toArray(children).filter(
-    (child) => child.type.displayName === "TabsContent"
-  );
+const TabsContent = React.forwardRef(({ className, ...props }, ref) => (
+  <TabsPrimitive.Content
+    ref={ref}
+    className={cn(
+      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      className
+    )}
+    {...props}
+  />
+));
+TabsContent.displayName = TabsPrimitive.Content.displayName;
 
-  const currentValue = value || activeTab;
-
-  return (
-    <div className={`w-full ${className}`} {...props}>
-      <div className="flex border-b border-gray-200 dark:border-gray-800">
-        {triggers.map((trigger) => {
-          return React.cloneElement(trigger, {
-            key: trigger.props.value,
-            active: currentValue === trigger.props.value,
-            onClick: () => handleTabChange(trigger.props.value),
-          });
-        })}
-      </div>
-      <div className="mt-2">
-        {contents.map((content) => {
-          return React.cloneElement(content, {
-            key: content.props.value,
-            active: currentValue === content.props.value,
-          });
-        })}
-      </div>
-    </div>
-  );
-};
-
-const TabsTrigger = ({
-  children,
-  value,
-  active,
-  onClick,
-  className = "",
-  ...props
-}) => {
-  return (
-    <button
-      className={`px-4 py-2 text-sm font-medium ${
-        active
-          ? "border-b-2 border-orange-500 text-orange-600 dark:text-orange-400"
-          : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-      } ${className}`}
-      onClick={onClick}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-};
-
-TabsTrigger.displayName = "TabsTrigger";
-
-const TabsContent = ({ children, value, active, className = "", ...props }) => {
-  if (!active) return null;
-
-  return (
-    <div className={`mt-2 ${className}`} {...props}>
-      {children}
-    </div>
-  );
-};
-
-TabsContent.displayName = "TabsContent";
-
-export { Tabs, TabsTrigger, TabsContent };
+export { Tabs, TabsList, TabsTrigger, TabsContent };

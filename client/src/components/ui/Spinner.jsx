@@ -1,3 +1,6 @@
+import React from "react";
+import { cn } from "../../lib/utils";
+
 const Spinner = ({ size = "md", className = "", ...props }) => {
   const sizeClasses = {
     sm: "h-4 w-4",
@@ -8,7 +11,11 @@ const Spinner = ({ size = "md", className = "", ...props }) => {
 
   return (
     <div
-      className={`animate-spin text-gray-400 dark:text-gray-600 ${sizeClasses[size]} ${className}`}
+      className={cn(
+        "animate-spin text-muted-foreground",
+        sizeClasses[size],
+        className
+      )}
       {...props}
     >
       <svg
@@ -34,5 +41,7 @@ const Spinner = ({ size = "md", className = "", ...props }) => {
     </div>
   );
 };
+
+export { Spinner };
 
 export default Spinner;

@@ -23,9 +23,6 @@ importers:
       cors:
         specifier: ^2.8.5
         version: 2.8.5
-      dotenv:
-        specifier: ^16.5.0
-        version: 16.5.0
       express:
         specifier: ^5.1.0
         version: 5.1.0
@@ -56,15 +53,9 @@ importers:
       pdf-parse:
         specifier: ^1.1.1
         version: 1.1.1
-      pdf2json:
-        specifier: ^3.1.5
-        version: 3.1.5
       pino:
         specifier: ^9.9.0
         version: 9.9.0
-      pino-pretty:
-        specifier: ^13.1.1
-        version: 13.1.1
       tesseract.js:
         specifier: ^6.0.1
         version: 6.0.1
@@ -72,9 +63,15 @@ importers:
         specifier: ^3.22.4
         version: 3.25.76
     devDependencies:
+      dotenv:
+        specifier: ^16.5.0
+        version: 16.5.0
       nodemon:
         specifier: ^3.1.9
         version: 3.1.9
+      pino-pretty:
+        specifier: ^13.1.1
+        version: 13.1.1
 
 packages:
 
@@ -708,13 +705,6 @@ packages:
   pdf-parse@1.1.1:
     resolution: {integrity: sha512-v6ZJ/efsBpGrGGknjtq9J/oC8tZWq0KWL5vQrk2GlzLEQPUDB1ex+13Rmidl1neNN358Jn9EHZw5y07FFtaC7A==}
     engines: {node: '>=6.8.1'}
-
-  pdf2json@3.1.5:
-    resolution: {integrity: sha512-djZPInDLNuJU+o6GaJNvcoUh6MtUAx3IYTQCTxywHzeg1jC5YWgz/XzlgmduxxBblpMTqY2fjcWwvyRdGPTyrQ==}
-    engines: {node: '>=20.18.0', npm: '>=10.8.2'}
-    hasBin: true
-    bundledDependencies:
-      - '@xmldom/xmldom'
 
   picomatch@2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
@@ -1611,8 +1601,6 @@ snapshots:
       node-ensure: 0.0.0
     transitivePeerDependencies:
       - supports-color
-
-  pdf2json@3.1.5: {}
 
   picomatch@2.3.1: {}
 

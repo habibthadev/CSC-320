@@ -7,16 +7,25 @@ import {
   Upload,
   HelpCircle,
   Mail,
+  Clock,
+  BookOpen,
+  MessageCircle,
 } from "lucide-react";
-import Button from "../../components/ui/Button";
-import Input from "../../components/ui/Input";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
 } from "../../components/ui/Card";
-import { Tabs, TabsTrigger, TabsContent } from "../../components/ui/Tabs";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "../../components/ui/Tabs";
+import { Badge } from "../../components/ui/Badge";
 import { fadeIn, staggerItems } from "../../utils/animations";
 
 const HelpCenter = () => {
@@ -107,62 +116,89 @@ const HelpCenter = () => {
     : faqs;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+    <div className="min-h-screen bg-background">
+      <div className="container max-w-6xl mx-auto px-4 py-8">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+            <HelpCircle className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="text-4xl font-bold tracking-tight mb-4">
             Help Center
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Find answers to common questions and learn how to get the most out
             of our platform.
           </p>
         </div>
 
-        <Card className="mb-8">
+        <Card className="mb-8 border-0 shadow-lg">
           <CardContent className="p-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+            <div className="relative max-w-lg mx-auto">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
               <Input
-                placeholder="Search for help..."
+                placeholder="Search for help articles..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-12 h-12 text-base"
               />
             </div>
           </CardContent>
         </Card>
 
         <Tabs defaultValue="faq" value={activeTab} onValueChange={setActiveTab}>
-          <div className="border-b border-gray-200 dark:border-gray-800 mb-6">
-            <div className="flex overflow-x-auto">
-              <TabsTrigger value="faq">Frequently Asked Questions</TabsTrigger>
-              <TabsTrigger value="guides">User Guides</TabsTrigger>
-              <TabsTrigger value="contact">Contact Support</TabsTrigger>
-            </div>
-          </div>
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger value="faq" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              FAQ
+            </TabsTrigger>
+            <TabsTrigger value="guides" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Guides
+            </TabsTrigger>
+            <TabsTrigger value="contact" className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4" />
+              Support
+            </TabsTrigger>
+          </TabsList>
 
           <TabsContent value="faq" ref={contentRef}>
-            <div className="space-y-6" ref={faqItemsRef}>
+            <div className="space-y-4" ref={faqItemsRef}>
               {filteredFaqs.length === 0 ? (
-                <div className="text-center py-12">
-                  <HelpCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-                    No results found
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400">
-                    We couldn't find any FAQs matching your search. Try
-                    different keywords or browse the categories.
-                  </p>
-                </div>
+                <Card className="border-dashed">
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <div className="rounded-full bg-muted p-3 mb-4">
+                      <Search className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">
+                      No results found
+                    </h3>
+                    <p className="text-muted-foreground text-center max-w-sm">
+                      We couldn't find any FAQs matching your search. Try
+                      different keywords or browse all categories.
+                    </p>
+                  </CardContent>
+                </Card>
               ) : (
                 filteredFaqs.map((faq, index) => (
-                  <Card key={index} className="faq-item">
-                    <CardHeader>
-                      <CardTitle className="text-lg">{faq.question}</CardTitle>
+                  <Card
+                    key={index}
+                    className="faq-item border-0 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <CardTitle className="text-lg font-medium leading-tight pr-4">
+                          {faq.question}
+                        </CardTitle>
+                        <Badge
+                          variant="secondary"
+                          className="text-xs capitalize shrink-0"
+                        >
+                          {faq.category}
+                        </Badge>
+                      </div>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600 dark:text-gray-300">
+                    <CardContent className="pt-0">
+                      <p className="text-muted-foreground leading-relaxed">
                         {faq.answer}
                       </p>
                     </CardContent>
@@ -173,64 +209,105 @@ const HelpCenter = () => {
           </TabsContent>
 
           <TabsContent value="guides" ref={contentRef}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow group">
                 <CardContent className="p-6">
                   <div className="flex flex-col items-center text-center">
-                    <Upload className="h-10 w-10 text-orange-500 mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    <div className="rounded-full bg-primary/10 p-4 mb-4 group-hover:bg-primary/20 transition-colors">
+                      <Upload className="h-8 w-8 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">
                       Document Upload Guide
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-300 mb-4">
-                      Learn how to upload and manage your documents.
+                    <p className="text-muted-foreground mb-4 leading-relaxed">
+                      Learn how to upload and manage your documents efficiently.
                     </p>
-                    <Button variant="outline">View Guide</Button>
+                    <Button variant="outline" className="w-full">
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      View Guide
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow group">
                 <CardContent className="p-6">
                   <div className="flex flex-col items-center text-center">
-                    <MessageSquare className="h-10 w-10 text-orange-500 mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    <div className="rounded-full bg-primary/10 p-4 mb-4 group-hover:bg-primary/20 transition-colors">
+                      <MessageSquare className="h-8 w-8 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">
                       Document Chat Tutorial
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-300 mb-4">
-                      Learn how to chat with your documents effectively.
+                    <p className="text-muted-foreground mb-4 leading-relaxed">
+                      Master the art of chatting with your documents
+                      effectively.
                     </p>
-                    <Button variant="outline">View Guide</Button>
+                    <Button variant="outline" className="w-full">
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      View Guide
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow group">
                 <CardContent className="p-6">
                   <div className="flex flex-col items-center text-center">
-                    <Brain className="h-10 w-10 text-orange-500 mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                      Question Generation Guide
+                    <div className="rounded-full bg-primary/10 p-4 mb-4 group-hover:bg-primary/20 transition-colors">
+                      <Brain className="h-8 w-8 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">
+                      Question Generation
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-300 mb-4">
-                      Learn how to generate and answer questions from your
-                      documents.
+                    <p className="text-muted-foreground mb-4 leading-relaxed">
+                      Generate and answer questions from your documents.
                     </p>
-                    <Button variant="outline">View Guide</Button>
+                    <Button variant="outline" className="w-full">
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      View Guide
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow group">
                 <CardContent className="p-6">
                   <div className="flex flex-col items-center text-center">
-                    <FileText className="h-10 w-10 text-orange-500 mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                      Getting Started Guide
+                    <div className="rounded-full bg-primary/10 p-4 mb-4 group-hover:bg-primary/20 transition-colors">
+                      <FileText className="h-8 w-8 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">
+                      Getting Started
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-300 mb-4">
+                    <p className="text-muted-foreground mb-4 leading-relaxed">
                       A complete overview of the platform for new users.
                     </p>
-                    <Button variant="outline">View Guide</Button>
+                    <Button variant="outline" className="w-full">
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      View Guide
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow group md:col-span-2 lg:col-span-2">
+                <CardContent className="p-6">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="rounded-full bg-primary/10 p-4 mb-4 group-hover:bg-primary/20 transition-colors">
+                      <HelpCircle className="h-8 w-8 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">
+                      Advanced Features
+                    </h3>
+                    <p className="text-muted-foreground mb-4 leading-relaxed">
+                      Discover advanced features and best practices for power
+                      users.
+                    </p>
+                    <Button variant="outline" className="w-full max-w-xs">
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      View Guide
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -238,57 +315,105 @@ const HelpCenter = () => {
           </TabsContent>
 
           <TabsContent value="contact" ref={contentRef}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Support</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <p className="text-gray-600 dark:text-gray-300">
-                  Need help with something not covered in our FAQs or guides?
-                  Our support team is here to help.
-                </p>
-
-                <div className="flex flex-col md:flex-row gap-6">
-                  <div className="flex-1 p-6 border border-gray-200 dark:border-gray-800 rounded-lg text-center">
-                    <Mail className="h-8 w-8 text-orange-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Mail className="h-5 w-5 text-primary" />
                       Email Support
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-300 mb-4">
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-muted-foreground">
                       Send us an email and we'll get back to you within 24
                       hours.
                     </p>
-                    <a
-                      href="mailto: adebayohabib7@gmail.com"
-                      className="text-orange-600 hover:text-orange-700 dark:text-orange-500 dark:hover:text-orange-400 font-medium"
-                    >
-                      adebayohabib7@gmail.com
-                    </a>
-                  </div>
+                    <div className="p-4 bg-muted/30 rounded-lg">
+                      <a
+                        href="mailto:adebayohabib7@gmail.com"
+                        className="text-primary hover:underline font-medium"
+                      >
+                        adebayohabib7@gmail.com
+                      </a>
+                    </div>
+                    <Button variant="outline" className="w-full">
+                      <Mail className="mr-2 h-4 w-4" />
+                      Send Email
+                    </Button>
+                  </CardContent>
+                </Card>
 
-                  <div className="flex-1 p-6 border border-gray-200 dark:border-gray-800 rounded-lg text-center">
-                    <HelpCircle className="h-8 w-8 text-orange-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageCircle className="h-5 w-5 text-primary" />
                       Help Desk
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-300 mb-4">
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-muted-foreground">
                       Submit a support ticket for more complex issues.
                     </p>
-                    <Button>Submit Ticket</Button>
-                  </div>
-                </div>
+                    <Button className="w-full">
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Submit Ticket
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
 
-                <div className="p-6 bg-orange-50 dark:bg-gray-800 rounded-lg">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    Support Hours
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Our support team is available Monday through Friday, 9:00 AM
-                    to 5:00 PM EST.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+              <div className="space-y-6">
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-primary" />
+                      Support Hours
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          Monday - Friday
+                        </span>
+                        <span className="font-medium">
+                          9:00 AM - 5:00 PM EST
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Weekend</span>
+                        <span className="font-medium">Limited Support</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          Response Time
+                        </span>
+                        <span className="font-medium">Within 24 hours</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold mb-2">Need Immediate Help?</h3>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      Check our FAQ section first - most questions are answered
+                      there!
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => setActiveTab("faq")}
+                      className="w-full"
+                    >
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      Browse FAQ
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

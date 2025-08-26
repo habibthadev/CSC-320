@@ -1,21 +1,27 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { UserPlus, User, Mail, Lock } from "lucide-react";
-import Button from "../../components/ui/Button";
-import Input from "../../components/ui/Input";
-import Label from "../../components/ui/Label";
+import { User, Mail, Lock, UserPlus, ArrowLeft } from "lucide-react";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { Label } from "../../components/ui/Label";
 import {
   Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
 } from "../../components/ui/Card";
-import { useRegister, useAuth } from "../../hooks/useAuth";
-import { fadeIn } from "../../utils/animations";
+import { Alert } from "../../components/ui/Alert";
+import { useRegister } from "../../hooks/useAuth";
+import useTheme from "../../hooks/useTheme";
+import { fadeOut } from "../../utils/animations";
 
 const Register = () => {
+  useTheme();
+  
+  const navigate = useNavigate();
+  const formRef = useRef();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -23,30 +29,20 @@ const Register = () => {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
-  const navigate = useNavigate();
-  const formRef = useRef(null);
 
-  const { isAuthenticated } = useAuth();
   const registerMutation = useRegister();
-
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/documents", { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
 
   const validate = () => {
     const newErrors = {};
 
-    if (!formData.name) {
+    if (!formData.name.trim()) {
       newErrors.name = "Name is required";
     }
 
-    if (!formData.email) {
+    if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
+      newErrors.email = "Please enter a valid email";
     }
 
     if (!formData.password) {
@@ -82,67 +78,98 @@ const Register = () => {
 
     if (!validate()) return;
 
-    registerMutation.mutate({
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-    });
+    registerMutation.mutate(
+      {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      },
+      {
+        onSuccess: () => {
+          fadeOut(formRef.current);
+          setTimeout(() => {
+            navigate("/login", {
+              state: { message: "Registration successful! Please log in." },
+            });
+          }, 300);
+        },
+        onError: (error) => {
+          setErrors({
+            submit: error.response?.data?.message || "Registration failed",
+          });
+        },
+      }
+    );
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-8rem)] px-4 py-12">
-      <Card className="w-full max-w-md" ref={formRef}>
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Link
+        to="/"
+        className="absolute top-4 left-4 z-10 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Home
+      </Link>
+
+      <Card className="w-full max-w-md border bg-card" ref={formRef}>
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
+          <CardTitle className="text-2xl font-bold tracking-tight text-card-foreground">
             Create an account
           </CardTitle>
-          <CardDescription className="text-center">
-            Enter your details to create your account
+          <CardDescription className="text-muted-foreground">
+            Enter your details below to create your account
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {errors.submit && (
+            <Alert variant="destructive" className="mb-4 border-destructive/50">
+              {errors.submit}
+            </Alert>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" required>
-                Name
+              <Label htmlFor="name" required className="text-foreground">
+                Full Name
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                 <Input
                   id="name"
                   name="name"
-                  placeholder="John Doe"
+                  type="text"
+                  placeholder="Enter your full name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="pl-10"
+                  className="pl-10 border-input bg-background text-foreground focus:border-teal-500 focus:ring-teal-500"
                   error={errors.name}
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email" required>
-                Email
+              <Label htmlFor="email" required className="text-foreground">
+                Email Address
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="name@example.com"
+                  placeholder="Enter your email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="pl-10"
+                  className="pl-10 border-input bg-background text-foreground focus:border-teal-500 focus:ring-teal-500"
                   error={errors.email}
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" required>
+              <Label htmlFor="password" required className="text-foreground">
                 Password
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                 <Input
                   id="password"
                   name="password"
@@ -150,17 +177,17 @@ const Register = () => {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
-                  className="pl-10"
+                  className="pl-10 border-input bg-background text-foreground focus:border-teal-500 focus:ring-teal-500"
                   error={errors.password}
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" required>
+              <Label htmlFor="confirmPassword" required className="text-foreground">
                 Confirm Password
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -168,14 +195,14 @@ const Register = () => {
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="pl-10"
+                  className="pl-10 border-input bg-background text-foreground focus:border-teal-500 focus:ring-teal-500"
                   error={errors.confirmPassword}
                 />
               </div>
             </div>
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white dark:bg-teal-500 dark:hover:bg-teal-600"
               isLoading={registerMutation.isPending}
               icon={UserPlus}
             >
@@ -184,11 +211,11 @@ const Register = () => {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col">
-          <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-center text-sm text-muted-foreground mt-2">
             Already have an account?{" "}
             <Link
               to="/login"
-              className="text-orange-600 hover:text-orange-700 dark:text-orange-500 dark:hover:text-orange-400"
+              className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 font-medium underline underline-offset-4"
             >
               Login
             </Link>

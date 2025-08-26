@@ -122,7 +122,7 @@ app.use("/api/rag", ragRoutes);
 
 app.use(errorHandler);
 
-if (NODE_ENV !== "test" && NODE_ENV !== "serverless") {
+if (NODE_ENV !== "test" && NODE_ENV !== "production") {
   const initializeServer = async () => {
     try {
       await connectToDatabase();

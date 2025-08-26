@@ -27,6 +27,8 @@ import ExamResults from "./pages/exam/ExamResults";
 import TermsOfService from "./pages/legal/TermsOfService";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import NotFound from "./pages/errors/NotFound";
+import { Scroll } from "lucide-react";
+import { ScrollToTop } from "./helpers/scrollToTop";
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -41,7 +43,6 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   const { isLoading: authLoading } = useAuthInit();
 
-
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -52,6 +53,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -101,7 +103,7 @@ function App() {
         />
 
         <Route
-          path="/documents/:id/edit"
+          path="/documents/edit/:id"
           element={
             <ProtectedRoute>
               <Layout>
