@@ -114,11 +114,11 @@ const HomePage = () => {
                       <Button
                         asChild
                         size="lg"
-                        className="w-full sm:w-auto min-w-[200px] h-12 text-orange-foreground shadow-lg"
+                        className="w-full sm:w-auto min-w-[200px] h-12 text-orange-foreground shadow-lg bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 transition-all duration-300 transform hover:scale-105"
                       >
                         <Link
                           to="/documents/upload"
-                          className="flex items-center justify-center gap-3 px-6 py-3 text-base font-semibold bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 rounded-mdtransition-all duration-300 transform hover:scale-105 rounded-md"
+                          className="flex items-center justify-center gap-3"
                         >
                           <Upload className="h-5 w-5 flex-shrink-0" />
                           <span>Upload Document</span>
@@ -128,11 +128,11 @@ const HomePage = () => {
                         variant="outline"
                         size="lg"
                         asChild
-                        className="w-full sm:w-auto min-w-[200px] h-12 border-2 border-orange-300"
+                        className="w-full sm:w-auto min-w-[200px] h-12 border-2 border-orange-300 px-6 py-3 text-base font-semibold text-foreground bg-transparent hover:bg-orange-50 hover:border-orange-400 rounded-md transition-all duration-300 transform hover:scale-105"
                       >
                         <Link
                           to="/documents"
-                          className="flex items-center justify-center gap-3 px-6 py-3 text-base font-semibold text-foreground bg-transparent hover:bg-orange-50 hover:border-orange-400 rounded-md transition-all duration-300 transform hover:scale-105"
+                          className="flex items-center justify-center gap-3"
                         >
                           <FileText className="h-5 w-5 flex-shrink-0" />
                           <span>View Documents</span>
@@ -142,7 +142,7 @@ const HomePage = () => {
                   ) : (
                     <>
                       <Button
-                        // asChild
+                        asChild
                         size="lg"
                         className="w-full sm:w-auto min-w-[200px] h-12 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-background transition-all duration-300 transform hover:scale-105"
                       >
@@ -157,7 +157,7 @@ const HomePage = () => {
                       <Button
                         variant="outline"
                         size="lg"
-                        // asChild
+                        asChild
                         className="w-full sm:w-auto min-w-[180px] h-12 border-2 border-orange-300 bg-background hover:bg-orange-50 hover:border-orange-400 transition-all duration-300 transform hover:scale-105"
                       >
                         <Link
@@ -238,12 +238,12 @@ const HomePage = () => {
                 <>
                   <Button
                     size="lg"
-                    asChild
-                    className="w-full sm:w-auto min-w-[220px] h-12"
+                    // asChild
+                    className="w-full sm:w-auto min-w-[220px] h-12 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-background transition-all duration-300 transform hover:scale-105"
                   >
                     <Link
                       to="/register"
-                      className="flex items-center justify-center gap-3 px-6 py-3 text-base font-semibold group bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-orange-foreground transition-all duration-300 transform hover:scale-105 rounded-md"
+                      className="flex items-center justify-center gap-3 px-6 py-3 text-base font-semibold "
                     >
                       <span>Start Free Trial</span>
                       <ArrowRight className="h-5 w-5 flex-shrink-0 transition-transform group-hover:translate-x-1" />
@@ -252,12 +252,12 @@ const HomePage = () => {
                   <Button
                     variant="outline"
                     size="lg"
-                    asChild
-                    className="w-full sm:w-auto min-w-[160px] h-12 border-2 "
+                    // asChild
+                    className="w-full sm:w-auto min-w-[160px] h-12 border-2 border-orange-300 bg-background hover:bg-orange-50 hover:border-orange-400 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105"
                   >
                     <Link
                       to="/login"
-                      className="flex items-center justify-center px-6 py-3 text-base font-semibold border-orange-300 bg-background hover:bg-orange-50 hover:border-orange-400 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 rounded-md"
+                      className="flex items-center justify-center px-6 py-3 text-base font-semibold  transition-all duration-300 transform hover:scale-105"
                     >
                       <span>Sign In</span>
                     </Link>
@@ -268,11 +268,11 @@ const HomePage = () => {
                 <Button
                   size="lg"
                   asChild
-                  className="w-full sm:w-auto min-w-[280px] h-12"
+                  className="w-full sm:w-auto min-w-[280px] h-12 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-background transition-all duration-300 transform hover:scale-105"
                 >
                   <Link
                     to="/documents/upload"
-                    className="flex items-center justify-center gap-3 px-6 py-3 text-base font-semibold group bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-orange-foreground transition-all duration-300 transform hover:scale-105 rounded-md"
+                    className="flex items-center justify-center gap-3"
                   >
                     <span>Upload Your First Document</span>
                     <ArrowRight className="h-5 w-5 flex-shrink-0 transition-transform group-hover:translate-x-1" />

@@ -378,7 +378,7 @@ const HelpCenter = () => {
                           Monday - Friday
                         </span>
                         <span className="font-medium">
-                          9:00 AM - 5:00 PM EST
+                          9:00 AM - 5:00 PM WAT
                         </span>
                       </div>
                       <div className="flex justify-between">
