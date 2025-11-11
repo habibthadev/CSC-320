@@ -162,10 +162,14 @@ const DocumentDetail = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
-          <Button variant="outline" asChild className="h-11 font-medium px-4">
+          <Button
+            variant="outline"
+            asChild
+            className="h-11 font-medium px-4 py-2 bg-card border border-border hover:bg-accent text-foreground transition-colors rounded-md"
+          >
             <Link
               to={`/documents/edit/${id}`}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-card border border-border hover:bg-accent text-foreground transition-colors rounded-md"
+              className="flex items-center justify-center gap-2"
             >
               <Edit className="h-4 w-4" />
               Edit
@@ -181,20 +185,24 @@ const DocumentDetail = () => {
             Delete
           </Button>
 
-          <Button asChild className="h-11 font-medium px-4">
+          <Button asChild className="h-11 font-medium px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white border-0 transition-colors rounded-md">
             <Link
               to={`/chat/${id}`}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white border-0 transition-colors rounded-md"
+              className="flex items-center justify-center gap-2"
             >
               <MessageSquare className="h-4 w-4" />
               Chat
             </Link>
           </Button>
 
-          <Button variant="secondary" asChild className="h-11 font-medium px-4">
+          <Button
+            variant="secondary"
+            asChild
+            className="h-11 font-medium px-4 py-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border transition-colors rounded-md"
+          >
             <Link
               to={`/generate/${id}`}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border transition-colors rounded-md"
+              className="flex items-center justify-center gap-2"
             >
               <Sparkles className="h-4 w-4" />
               Generate Exam

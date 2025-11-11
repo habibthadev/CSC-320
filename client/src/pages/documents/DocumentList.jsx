@@ -91,10 +91,14 @@ const DocumentList = () => {
               Manage and organize your uploaded documents
             </p>
           </div>
-          <Button asChild size="lg" className="w-full sm:w-auto">
+          <Button
+            asChild
+            size="lg"
+            className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white dark:bg-teal-500 dark:hover:bg-teal-600 shadow-lg hover:shadow-xl transition-all duration-300 rounded-md px-6 py-3"
+          >
             <Link
               to="/documents/upload"
-              className="flex items-center justify-center gap-2 px-6 py-3 text-base font-semibold bg-teal-600 hover:bg-teal-700 text-white dark:bg-teal-500 dark:hover:bg-teal-600 shadow-lg hover:shadow-xl transition-all duration-300 rounded-md"
+              className="flex items-center justify-center gap-2 text-base font-semibold"
             >
               <Upload className="h-5 w-5 flex-shrink-0" />
               <span>Upload Document</span>
@@ -153,12 +157,12 @@ const DocumentList = () => {
             </p>
             {!searchTerm && (
               <Button
-                // asChild
+                asChild
                 className="mt-6 bg-teal-600 hover:bg-teal-700 text-white dark:bg-teal-500 dark:hover:bg-teal-600 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <Link
                   to="/documents/upload"
-                  className="flex items-center gap-2 px-6 py-3 text-base font-semibold bg-transparent"
+                  className="flex items-center gap-2 px-6 py-3 text-base font-semibold"
                 >
                   <Upload className="h-4 w-4 flex-shrink-0" />
                   <span>Upload Document</span>
@@ -273,11 +277,11 @@ const DocumentList = () => {
                       <Button
                         size="sm"
                         asChild
-                        className="flex-1 h-10 group/btn"
+                        className="flex-1 h-10 group/btn bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white transition-all duration-300 w-full rounded-md"
                       >
                         <Link
                           to={`/chat/${document._id}`}
-                          className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white transition-all duration-300 w-full h-full rounded-md"
+                          className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium"
                         >
                           <MessageSquare className="h-4 w-4 flex-shrink-0 group-hover/btn:scale-110 transition-transform" />
                           <span>Chat</span>

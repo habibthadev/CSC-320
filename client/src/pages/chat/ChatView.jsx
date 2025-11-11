@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Send,
   FileText,
@@ -33,20 +33,12 @@ import { Avatar } from "../../components/ui/Avatar";
 import { DropdownMenu } from "../../components/ui/DropdownMenu";
 import MarkdownMessage from "../../components/ui/MarkdownMessage";
 import StreamingMarkdown from "../../components/ui/StreamingMarkdown";
-import { useDocument, useDocuments } from "../../hooks/useDocuments";
-import {
-  useChatWithDocument,
-  useChatWithMultipleDocuments,
-  useGeneralChat,
-} from "../../hooks/useChat";
+import { useDocuments } from "../../hooks/useDocuments";
+import { useGeneralChat } from "../../hooks/useChat";
 import { fadeIn } from "../../utils/animations";
 
 const ChatView = () => {
-  const { id } = useParams();
-  const { data: document } = useDocument(id);
   const { data: documents = [] } = useDocuments();
-  const chatWithDocumentMutation = useChatWithDocument();
-  const chatWithMultipleMutation = useChatWithMultipleDocuments();
   const generalChatMutation = useGeneralChat();
 
   const [messages, setMessages] = useState([]);
@@ -54,7 +46,6 @@ const ChatView = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState("");
   const [expandedSources, setExpandedSources] = useState({});
-  const [selectedDocumentId, setSelectedDocumentId] = useState(id || null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -118,67 +109,58 @@ const ChatView = () => {
     setIsTyping(true);
     setStreamingMessage("");
 
-    const mutation = selectedDocumentId
-      ? chatWithDocumentMutation
-      : generalChatMutation;
-
     const conversationHistory = messages.map((msg) => ({
       role: msg.sender === "user" ? "user" : "assistant",
       content: msg.content,
     }));
 
-    const params = selectedDocumentId
-      ? {
-          documentId: selectedDocumentId,
-          query: inputMessage,
-          conversationHistory,
-        }
-      : { query: inputMessage, conversationHistory };
+    generalChatMutation.mutate(
+      { query: inputMessage, conversationHistory },
+      {
+        onSuccess: (data) => {
+          const response = data.response;
+          let currentIndex = 0;
 
-    mutation.mutate(params, {
-      onSuccess: (data) => {
-        const response = data.response;
-        let currentIndex = 0;
+          const streamInterval = setInterval(() => {
+            if (currentIndex < response.length) {
+              const remainingText = response.slice(currentIndex);
+              let chunkSize = 1;
 
-        const streamInterval = setInterval(() => {
-          if (currentIndex < response.length) {
-            const remainingText = response.slice(currentIndex);
-            let chunkSize = 1;
+              if (remainingText.match(/^[a-zA-Z0-9\s]/)) {
+                chunkSize = Math.min(3, remainingText.length);
+              } else if (remainingText.match(/^[*_`#]/)) {
+                chunkSize = 1;
+              } else {
+                chunkSize = Math.min(2, remainingText.length);
+              }
 
-            if (remainingText.match(/^[a-zA-Z0-9\s]/)) {
-              chunkSize = Math.min(3, remainingText.length);
-            } else if (remainingText.match(/^[*_`#]/)) {
-              chunkSize = 1;
+              const chunk = response.slice(0, currentIndex + chunkSize);
+              setStreamingMessage(chunk);
+              currentIndex += chunkSize;
             } else {
-              chunkSize = Math.min(2, remainingText.length);
+              clearInterval(streamInterval);
+
+              const botMessage = {
+                id: Date.now() + 1,
+                content: response,
+                sender: "bot",
+                timestamp: new Date().toISOString(),
+                sources: data.sources || [],
+                hasWebSearch: data.hasWebSearch || false,
+              };
+              setMessages((prev) => [...prev, botMessage]);
+              setIsTyping(false);
+              setStreamingMessage("");
             }
-
-            const chunk = response.slice(0, currentIndex + chunkSize);
-            setStreamingMessage(chunk);
-            currentIndex += chunkSize;
-          } else {
-            clearInterval(streamInterval);
-
-            const botMessage = {
-              id: Date.now() + 1,
-              content: response,
-              sender: "bot",
-              timestamp: new Date().toISOString(),
-              sources: data.sources || [],
-              hasWebSearch: data.hasWebSearch || false,
-            };
-            setMessages((prev) => [...prev, botMessage]);
-            setIsTyping(false);
-            setStreamingMessage("");
-          }
-        }, 50);
-      },
-      onError: (error) => {
-        toast.error(error.message || "Failed to send message");
-        setIsTyping(false);
-        setStreamingMessage("");
-      },
-    });
+          }, 50);
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to send message");
+          setIsTyping(false);
+          setStreamingMessage("");
+        },
+      }
+    );
   };
 
   const handleKeyPress = (e) => {
@@ -210,21 +192,7 @@ const ChatView = () => {
   };
 
   const handleDocumentSelect = (documentId) => {
-    setSelectedDocumentId(documentId);
-    setIsDropdownOpen(false);
-
-    setMessages([]);
-    toast.success(
-      documentId
-        ? `Switched to RAG mode with ${
-            documents.find((d) => d._id === documentId)?.title
-          }`
-        : "Switched to general chat mode"
-    );
-  };
-
-  const getCurrentSelectedDocument = () => {
-    return documents.find((doc) => doc._id === selectedDocumentId);
+    window.location.href = `/chat/${documentId}`;
   };
 
   const formatTime = (timestamp) => {
@@ -238,53 +206,46 @@ const ChatView = () => {
     <div className="min-h-screen bg-background">
       <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 max-w-5xl">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/documents")}
+            className="flex justify-start h-8 p-2 mb-2"
+          >
+            <ArrowLeft className="h-5 w-5" />{" "}
+            <span className="text-muted-foreground text-lg ml-2">
+              Back to documents
+            </span>
+          </Button>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Link
-                to={id ? `/documents/${id}` : "/documents"}
+              {/* <Link
+                to="/documents"
                 className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
-              </Link>
+              </Link> */}
               <div className="h-4 w-px bg-border" />
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center">
-                  {selectedDocumentId ? (
-                    <FileText className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                  ) : (
-                    <MessageCircle className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                  )}
+                  <MessageCircle className="h-4 w-4 text-teal-600 dark:text-teal-400" />
                 </div>
                 <div>
                   <h1 className="text-lg font-semibold text-foreground">
-                    {selectedDocumentId
-                      ? getCurrentSelectedDocument()?.title || "Document Chat"
-                      : "AI Assistant"}
+                    AI Assistant
                   </h1>
                   <p className="text-xs text-muted-foreground">
-                    {selectedDocumentId
-                      ? getCurrentSelectedDocument()?.vectorized
-                        ? "RAG Mode - Ready for questions"
-                        : "RAG Mode - Processing..."
-                      : "General Chat - Web access enabled"}
+                    General Chat - Web access enabled
                   </p>
                 </div>
               </div>
             </div>
             <Badge
-              variant={selectedDocumentId ? "default" : "secondary"}
-              className={
-                selectedDocumentId
-                  ? "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200 border-teal-200 dark:border-teal-800"
-                  : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border-blue-200 dark:border-blue-800"
-              }
+              variant="secondary"
+              className="bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200 border-teal-200 dark:border-teal-800"
             >
-              {selectedDocumentId
-                ? getCurrentSelectedDocument()?.vectorized
-                  ? "RAG Mode"
-                  : "Processing"
-                : "General Chat"}
+              General Chat
             </Badge>
           </div>
         </div>
@@ -299,71 +260,55 @@ const ChatView = () => {
                   <MessageCircle className="h-8 w-8 text-teal-600 dark:text-teal-400" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2 text-foreground">
-                  {selectedDocumentId
-                    ? "Ask about this document"
-                    : "Start a conversation"}
+                  Start a conversation
                 </h3>
                 <p className="text-muted-foreground max-w-md mb-8">
-                  {selectedDocumentId
-                    ? `I can help you understand and analyze "${
-                        getCurrentSelectedDocument()?.title
-                      }". Ask me anything!`
-                    : "I'm here to help with your questions and can search the web for current information. How can I assist you today?"}
+                  I'm here to help with your questions and can search the web
+                  for current information. How can I assist you today?
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
-                  {selectedDocumentId ? (
-                    <>
-                      <Button
-                        variant="outline"
-                        className="text-left justify-start h-auto p-4"
-                        onClick={() =>
-                          setInputMessage(
-                            "What is the main topic of this document?"
-                          )
-                        }
-                      >
-                        <MessageCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-                        <span>What's the main topic?</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="text-left justify-start h-auto p-4"
-                        onClick={() =>
-                          setInputMessage("Can you summarize the key points?")
-                        }
-                      >
-                        <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
-                        <span>Summarize key points</span>
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        variant="outline"
-                        className="text-left justify-start h-auto p-4"
-                        onClick={() =>
-                          setInputMessage(
-                            "How can you help me with my documents?"
-                          )
-                        }
-                      >
-                        <MessageCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-                        <span>How can you help?</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="text-left justify-start h-auto p-4"
-                        onClick={() =>
-                          setInputMessage(
-                            "What types of documents can you analyze?"
-                          )
-                        }
-                      >
-                        <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
-                        <span>What can you analyze?</span>
-                      </Button>
-                    </>
-                  )}
+                  <Button
+                    variant="outline"
+                    className="text-left justify-start h-auto p-4"
+                    onClick={() =>
+                      setInputMessage("How can you help me with my documents?")
+                    }
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span>How can you help?</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="text-left justify-start h-auto p-4"
+                    onClick={() =>
+                      setInputMessage(
+                        "What types of documents can you analyze?"
+                      )
+                    }
+                  >
+                    <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span>What can you analyze?</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="text-left justify-start h-auto p-4"
+                    onClick={() =>
+                      setInputMessage("What's the latest news in AI?")
+                    }
+                  >
+                    <Bot className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span>Latest AI news</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="text-left justify-start h-auto p-4"
+                    onClick={() =>
+                      setInputMessage("Help me understand a topic")
+                    }
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span>Explain a topic</span>
+                  </Button>
                 </div>
               </div>
             ) : (
@@ -639,38 +584,20 @@ const ChatView = () => {
                 value={inputMessage}
                 onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
-                placeholder={`Ask me anything${
-                  selectedDocumentId
-                    ? ` about ${
-                        getCurrentSelectedDocument()?.title || "this document"
-                      }`
-                    : " (with web search)"
-                }...`}
+                placeholder="Ask me anything (with web search)..."
                 className="resize-none border-input bg-background text-foreground focus:border-teal-500 focus:ring-teal-500 rounded-2xl pr-20 min-h-[52px] max-h-32"
                 rows={1}
-                disabled={
-                  chatWithDocumentMutation.isPending ||
-                  chatWithMultipleMutation.isPending ||
-                  generalChatMutation.isPending
-                }
+                disabled={generalChatMutation.isPending}
               />
               <div className="absolute right-2 bottom-2 flex items-center gap-1">
                 <div className="relative dropdown-container">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={`h-8 w-8 p-0 hover:bg-muted rounded-lg ${
-                      selectedDocumentId ? "bg-teal-100 dark:bg-teal-900" : ""
-                    }`}
+                    className="h-8 w-8 p-0 hover:bg-muted rounded-lg"
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   >
-                    <Paperclip
-                      className={`h-4 w-4 ${
-                        selectedDocumentId
-                          ? "text-teal-600 dark:text-teal-400"
-                          : ""
-                      }`}
-                    />
+                    <Paperclip className="h-4 w-4" />
                   </Button>
 
                   {isDropdownOpen && (
@@ -691,24 +618,16 @@ const ChatView = () => {
                         </div>
 
                         <div
-                          className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-muted ${
-                            !selectedDocumentId
-                              ? "bg-teal-100 dark:bg-teal-900"
-                              : ""
-                          }`}
+                          className="flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-muted"
                           onClick={() => handleDocumentSelect(null)}
                         >
                           <div className="flex items-center justify-center w-6 h-6">
-                            {!selectedDocumentId ? (
-                              <Check className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                            ) : (
-                              <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                            )}
+                            <Check className="h-4 w-4 text-teal-600 dark:text-teal-400" />
                           </div>
                           <div className="flex-1">
                             <p className="text-sm font-medium">General Chat</p>
                             <p className="text-xs text-muted-foreground">
-                              AI assistant with web access
+                              AI assistant with web access (current)
                             </p>
                           </div>
                         </div>
@@ -726,19 +645,11 @@ const ChatView = () => {
                           documents.map((doc) => (
                             <div
                               key={doc._id}
-                              className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-muted ${
-                                selectedDocumentId === doc._id
-                                  ? "bg-teal-100 dark:bg-teal-900"
-                                  : ""
-                              }`}
+                              className="flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-muted"
                               onClick={() => handleDocumentSelect(doc._id)}
                             >
                               <div className="flex items-center justify-center w-6 h-6">
-                                {selectedDocumentId === doc._id ? (
-                                  <Check className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                                ) : (
-                                  <FileText className="h-4 w-4 text-muted-foreground" />
-                                )}
+                                <FileText className="h-4 w-4 text-muted-foreground" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium truncate">
@@ -779,17 +690,12 @@ const ChatView = () => {
                 <Button
                   onClick={handleSendMessage}
                   disabled={
-                    !inputMessage.trim() ||
-                    chatWithDocumentMutation.isPending ||
-                    chatWithMultipleMutation.isPending ||
-                    generalChatMutation.isPending
+                    !inputMessage.trim() || generalChatMutation.isPending
                   }
                   size="sm"
                   className="h-8 w-8 p-0 bg-teal-600 hover:bg-teal-700 text-white dark:bg-teal-500 dark:hover:bg-teal-600 rounded-lg"
                 >
-                  {chatWithDocumentMutation.isPending ||
-                  chatWithMultipleMutation.isPending ||
-                  generalChatMutation.isPending ? (
+                  {generalChatMutation.isPending ? (
                     <Spinner className="h-3 w-3" />
                   ) : (
                     <Send className="h-3 w-3" />
