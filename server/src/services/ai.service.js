@@ -4,7 +4,7 @@ import { z } from "zod";
 import { AppError } from "../middleware/error.middleware.js";
 import { GOOGLE_GENERATIVE_AI_API_KEY } from "../config/env.js";
 
-const model = google("gemini-2.0-flash", {
+const model = google("gemini-2.5-flash", {
   apiKey: GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
